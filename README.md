@@ -10,7 +10,9 @@ But it can already be compiled like this.
 
 ```
 Was macht es:
-Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für: MoneyServer
+Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für:
+
+MoneyServer
 OpenSim
 Robust
 RobustHG
