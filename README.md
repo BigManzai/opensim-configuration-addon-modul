@@ -8,7 +8,7 @@ Basic module from Diva d2 without function, for setting up a controlled grid con
 
 But it can already be compiled like this. 
 
-'''
+´´´
 Was macht es:
 Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für: MoneyServer
 OpenSim
