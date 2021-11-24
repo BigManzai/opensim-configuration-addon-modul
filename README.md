@@ -8,8 +8,13 @@ Basic module from Diva d2 without function, for setting up a controlled grid con
 
 But it can already be compiled like this. 
 
+## Status
+Erster Test - first test
+
 ## Was macht es:
 Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für:
+
+Hopefully it will create working configurations from your * .ini.example files for: 
 
 ```
 MoneyServer
