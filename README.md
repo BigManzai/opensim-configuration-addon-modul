@@ -17,7 +17,7 @@ Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigur
 Hopefully it will create working configurations from your * .ini.example files for: 
 
 ```
-FloatsamCache
+FlotsamCache
 MoneyServer
 OpenSim
 Robust
