@@ -23,216 +23,6 @@ using System.Text.RegularExpressions;
 
 namespace OpenSim.Configuration
 {
-	class IniFile
-	{
-		private List<string> lines = new List<string>();
-		private string CommentCharacters = "#;";
-
-		string Path;
-		string EXE = Assembly.GetExecutingAssembly().GetName().Name;
-
-		[DllImport("kernel32", CharSet = CharSet.Unicode)]
-		static extern long WritePrivateProfileString(string Section, string Key, string Value, string FilePath);
-
-		[DllImport("kernel32", CharSet = CharSet.Unicode)]
-		static extern int GetPrivateProfileString(string Section, string Key, string Default, StringBuilder RetVal, int Size, string FilePath);
-
-		public IniFile(string IniPath = null)
-		{
-			Path = new FileInfo(IniPath ?? EXE + ".ini").FullName;
-		}
-
-		public string Read(string Key, string Section = null)
-		{
-			var RetVal = new StringBuilder(255);
-			GetPrivateProfileString(Section ?? EXE, Key, "", RetVal, 255, Path);
-			return RetVal.ToString();
-		}
-
-		// Replace failed
-
-		public void Write(string Key, string Value, string Section = null)
-		{
-			WritePrivateProfileString(Section ?? EXE, Key, Value, Path);
-		}
-
-		public void DeleteKey(string Key, string Section = null)
-		{
-			Write(Key, null, Section ?? EXE);
-		}
-
-		public void DeleteSection(string Section = null)
-		{
-			Write(null, null, Section ?? EXE);
-		}
-
-		public bool KeyExists(string Key, string Section = null)
-		{
-			return Read(Key, Section).Length > 0;
-		}
-		// Liest den Wert eines Eintrages aus
-		// <param name="Caption">Name des Bereiches</param>
-		// <param name="Entry">Name des Eintrages</param>
-		// <param name="CaseSensitive">true = Gross-/Kleinschreibung beachten</param>
-		// <returns>Wert des Eintrags oder leer</returns>
-		public string getValue(string Caption, string Entry, bool CaseSensitive)
-		{
-			int line = GetEntryLine(Caption, Entry, CaseSensitive);
-			if (line < 0)
-				return "";
-			int pos = lines[line].IndexOf("=");
-			if (pos < 0)
-				return "";
-			return lines[line].Substring(pos + 1).Trim();
-			// Evtl. noch abschliessende Kommentarbereiche entfernen
-		}
-		// Sucht die Zeilennummer (nullbasiert) eines gewänschten Eintrages
-		// <param name="Caption">Name des Bereiches</param>
-		// <param name="CaseSensitive">true = Gross-/Kleinschreibung beachten</param>
-		// <returns>Nummer der Zeile, sonst -1</returns>
-		public int GetCaptionLine(string Caption, bool CaseSensitive)
-		{
-			if (!CaseSensitive) Caption = Caption.ToLower();
-			for (int i = 0; i < lines.Count; i++)
-			{
-				string line = lines[i].Trim();
-				if (line == "") continue;
-				if (!CaseSensitive) line = line.ToLower();
-				// Erst den gewänschten Abschnitt suchen
-				if (line == "[" + Caption + "]")
-					return i;
-			}
-			return -1;// Bereich nicht gefunden
-		}
-		// Sucht die Zeilennummer (nullbasiert) eines gewänschten Eintrages
-		// <param name="Caption">Name des Bereiches</param>
-		// <param name="Entry">Name des Eintrages</param>
-		// <param name="CaseSensitive">true = Gross-/Kleinschreibung beachten</param>
-		// <returns>Nummer der Zeile, sonst -1</returns>
-		public int GetEntryLine(string Caption, string Entry, bool CaseSensitive)
-		{
-			Caption = Caption.ToLower();
-			if (!CaseSensitive) Entry = Entry.ToLower();
-			int CaptionStart = GetCaptionLine(Caption, false);
-			if (CaptionStart < 0) return -1;
-			for (int i = CaptionStart + 1; i < lines.Count; i++)
-			{
-				string line = lines[i].Trim();
-				if (line == "") continue;
-				if (!CaseSensitive) line = line.ToLower();
-				if (line.StartsWith("["))
-					return -1;// Ende, wenn der nächste Abschnitt beginnt
-				if (Regex.IsMatch(line, @"^[ \t]*[" + CommentCharacters + "]"))
-					continue; // Kommentar
-				if (line.StartsWith(Entry + "="))
-					return i;// Eintrag gefunden
-			}
-			return -1;// Eintrag nicht gefunden
-		}
-		// Kommentiert einen Wert aus
-		// <param name="Caption">Name des Bereiches</param>
-		// <param name="Entry">Name des Eintrages</param>
-		// <param name="CaseSensitive">true = Gross-/Kleinschreibung beachten</param>
-		// <returns>true = Eintrag gefunden und auskommentiert</returns>
-		public bool commentValue(string Caption, string Entry, bool CaseSensitive)
-		{
-			int line = GetEntryLine(Caption, Entry, CaseSensitive);
-			if (line < 0)
-				return false;
-			lines[line] = CommentCharacters[0] + lines[line];
-			return true;
-		}
-		// Setzt einen Wert in einem Bereich. Wenn der Wert
-		// (und der Bereich) noch nicht existiert, werden die
-		// entsprechenden Einträge erstellt.
-		// <param name="Caption">Name des Bereichs</param>
-		// <param name="Entry">name des Eintrags</param>
-		// <param name="Value">Wert des Eintrags</param>
-		// <param name="CaseSensitive">true = Gross-/Kleinschreibung beachten</param>
-		// <returns>true = Eintrag erfolgreich gesetzt</returns>
-		public bool setValue(string Caption, string Entry, string Value, bool CaseSensitive, bool SearchComments)
-		{
-			Caption = Caption.ToLower();
-			if (!CaseSensitive)
-				Entry = Entry.ToLower();
-			int lastCommentedFound = -1;
-			int CaptionStart = GetCaptionLine(Caption, false);
-			if (CaptionStart < 0)
-			{
-				lines.Add("[" + Caption + "]");
-				lines.Add(Entry + "=" + Value);
-				return true;
-			}
-
-			int EntryLine = GetEntryLine(Caption, Entry, CaseSensitive);
-			for (int i = CaptionStart + 1; i < lines.Count; i++)
-			{
-				string line = lines[i].Trim();
-				if (!CaseSensitive)
-					line = line.ToLower();
-				if (line == "")
-					continue;
-				// Ende, wenn der nächste Abschnitt beginnt
-				if (line.StartsWith("["))
-				{
-					lines.Insert(i, Entry + "=" + Value);
-					return true;
-				}
-
-				// Suche aukommentierte, aber gesuchte Einträge,
-				// falls der Eintrag noch nicht existiert.
-				if (SearchComments && EntryLine < 0 && Regex.IsMatch(line, @"^[ \t]*[" + CommentCharacters + "]"))
-				{
-					string tmpLine = line.Substring(1).Trim();
-					if (tmpLine.StartsWith(Entry))
-					{
-						// Werte vergleichen, wenn gleich,
-						// nur Kommentarzeichen läschen
-						int pos = tmpLine.IndexOf("=");
-						if (pos > 0)
-						{
-							if (Value == tmpLine.Substring(pos + 1).Trim())
-							{
-								lines[i] = tmpLine;
-								return true;
-							}
-						}
-						lastCommentedFound = i;
-					}
-					continue;// Kommentar
-				}
-
-				if (line.StartsWith(Entry))
-				{
-					lines[i] = Entry + "=" + Value;
-					return true;
-				}
-			}
-
-			if (lastCommentedFound > 0)
-				lines.Insert(lastCommentedFound + 1, Entry + "=" + Value);
-			else
-				lines.Insert(CaptionStart + 1, Entry + "=" + Value);
-			return true;
-		}
-		// änderrungen an einem Eintrag vornemen. Achtung CaseSensitive!
-		public string this[string Caption, string Entry]
-		{
-			get
-			{
-				return getValue(Caption, Entry, true);
-			}
-			set
-			{
-				setValue(Caption, Entry, value.ToString(), true, false);
-			}
-		}
-
-	}
-}
-
-namespace OpenSim.Configuration
-{
     public class Configure
     {
         private static string worldName = "My Virtual World";
@@ -247,8 +37,9 @@ namespace OpenSim.Configuration
         private static string ipAddress = "127.0.0.1";
 		private static string modus = "GridHG";
 
+		/*
         private static bool confirmationRequired = false;
-        private static readonly bool myWorldReconfig = false;				
+        private static bool myWorldReconfig = false;				
 		private static bool MoneyServerReconfig = false;
 		private static bool OpenSimReconfig = false;
 		private static bool RobustReconfig = false;
@@ -256,7 +47,9 @@ namespace OpenSim.Configuration
 		private static bool StandaloneCommonReconfig = false;
 		private static bool GridCommonReconfig = false;
 		private static bool osslEnableReconfig = false;
+		private static bool FlotsamCacheReconfig = false;
 		//private static bool RegionsReconfig = false;
+		*/
 
 		private enum RegionConfigStatus : uint
         {
@@ -271,16 +64,20 @@ namespace OpenSim.Configuration
 			
             GetUserInput();
 
+			//ConfigureTest();
+
+			ConfigureFlotsamCache();
 			ConfigureMoneyServer(); // OK
 			ConfigureOpenSim(); // OK
 			//ConfigureRobust();
 			ConfigureRobustHG(); // OK
-			ConfigureStandaloneCommon();
+			//ConfigureStandaloneCommon();
 			ConfigureGridCommon(); // OK
-
 			ConfigureosslEnable();
 
+
 			//ConfigureRegions();
+
 
 			DisplayInfo();
         }
@@ -379,9 +176,29 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				MoneyServerReconfig = true;
+				//MoneyServerReconfig = true;
 			}
 		}
+
+		// FlotsamCache.ini.example
+		private static void CheckMyFlotsamCacheConfig()
+		{
+			if (File.Exists("FlotsamCache.ini"))
+			{
+				try
+				{
+					File.Copy("FlotsamCache.ini.example", "FlotsamCache.ini");
+				}
+				catch
+				{
+					// ignore and proceed
+				}
+
+				//FlotsamCacheReconfig = true;
+			}
+		}
+
+
 
 		private static void CheckMyOpenSimConfig()
 		{
@@ -396,7 +213,7 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				OpenSimReconfig = true;
+				//OpenSimReconfig = true;
 			}
 		}
 
@@ -414,7 +231,7 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				RobustReconfig = true;
+				//RobustReconfig = true;
 			}
 		}
 
@@ -431,7 +248,7 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				RobustHGReconfig = true;
+				//RobustHGReconfig = true;
 			}
 		}
 
@@ -448,7 +265,7 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				StandaloneCommonReconfig = true;
+				//StandaloneCommonReconfig = true;
 			}
 		}
 
@@ -465,7 +282,7 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				osslEnableReconfig = true;
+				//osslEnableReconfig = true;
 			}
 		}
 
@@ -482,7 +299,7 @@ namespace OpenSim.Configuration
 					// ignore and proceed
 				}
 
-				GridCommonReconfig = true;
+				//GridCommonReconfig = true;
 			}
 		}
 
@@ -504,6 +321,56 @@ namespace OpenSim.Configuration
 			}
 		} */
 
+
+		private static void ConfigureTest()
+		{
+
+			//Write
+			// DefaultVolume=100 im Bereich Audio setzen
+
+
+
+			/*
+			MoneyServer
+			OpenSim
+			Robust
+			RobustHG
+			StandaloneCommon
+			GridCommon
+			osslEnable
+			Regions
+			*/
+
+			// Schreiben:
+
+
+			// Lesen:
+
+
+						
+			// Wert auskommentieren:
+
+
+
+
+			// Key Löschen:
+
+
+			Console.WriteLine("Test beendet!!!");
+			//Console.ReadLine(); // Warte auf Return/Enter
+		}
+
+
+
+		// ConfigureFlotsamCache
+		private static void ConfigureFlotsamCache()
+		{
+			// FlotsamCache.ini.example
+			CheckMyFlotsamCacheConfig();
+
+
+			Console.WriteLine("MoneyServer has been successfully configured");
+		}
 
 		///ConfigureMoneyServer OK
 		private static void ConfigureMoneyServer()
@@ -656,11 +523,11 @@ namespace OpenSim.Configuration
 
 			// Test
 
-			var OpenSimIni = new IniFile("OpenSim.ini");
+			//var OpenSimIni = new IniFile("OpenSim.ini");
 			//	   DisableFacelights = "false"
-			OpenSimIni.Write("DisableFacelights ", " true", "ClientStack.LindenUDP");
+			//OpenSimIni.Write("DisableFacelights ", " true", "ClientStack.LindenUDP");
 			//	   gridname = "OSGrid"
-			OpenSimIni.Write("gridname ", " " + '"' + worldName + '"', "DataSnapshot");
+			//OpenSimIni.Write("gridname ", " " + '"' + worldName + '"', "DataSnapshot");
 
 			// Test Ende
 
@@ -826,18 +693,18 @@ namespace OpenSim.Configuration
 				return;
 			}
 
-			var RobustHGIni = new IniFile("Robust.HG.ini");
+			//var RobustHGIni = new IniFile("Robust.HG.ini");
 			//	[Const]
 			//	BaseURL = "http://127.0.0.1"
 			//RobustIni.Write("BaseURL ", ipAddress, "Const");
-			RobustHGIni.Write("BaseURL ", " " + '"' + "http://" + ipAddress + '"', "Const");
+			//RobustHGIni.Write("BaseURL ", " " + '"' + "http://" + ipAddress + '"', "Const");
 			//	[DatabaseService]
 			//	StorageProvider = "OpenSim.Data.MySQL.dll"
 			//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
 			//if (line.Contains("ConnectionString"))
 			//line = connString;
-			RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
-			RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
+			//RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
+			//RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
 
 
 
@@ -994,10 +861,10 @@ namespace OpenSim.Configuration
 				return;
 			}
 
-			var RobustHGIni = new IniFile("config-include/GridCommon.ini");
+			//var RobustHGIni = new IniFile("config-include/GridCommon.ini");
 
-			RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
-			RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
+			//RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
+			//RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
 
 			Console.WriteLine("GridCommon has been successfully configured");
 		}
