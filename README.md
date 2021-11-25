@@ -17,15 +17,15 @@ Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigur
 Hopefully it will create working configurations from your * .ini.example files for: 
 
 ```
-FlotsamCache
-MoneyServer
-OpenSim
-Robust
-RobustHG
-StandaloneCommon
-GridCommon
-osslEnable
-Regions
+FlotsamCache.ini
+MoneyServer.ini
+OpenSim.ini
+Robust.ini
+Robust.HG.ini
+StandaloneCommon.ini
+GridCommon.ini
+osslEnable.ini
+Regions.ini
 ```
 ## TODO
 Das sollte schon mono kompatibel sein. - That should already be mono compatible. 
