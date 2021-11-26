@@ -69,15 +69,15 @@ namespace OpenSim.Configuration
 			
             GetUserInput();
 
-			ConfigureFlotsamCache();
+			ConfigureFlotsamCache(); // OK
 			ConfigureMoneyServer(); // OK
 			ConfigureOpenSim(); // OK
-			ConfigureRobust();
+			ConfigureRobust(); // OK
 			ConfigureRobustHG(); // OK
 			//ConfigureStandaloneCommon();
 			ConfigureGridCommon(); // OK
-			ConfigureosslEnable();
-			//ConfigureRegions();
+			ConfigureosslEnable(); // OK aber leer
+			ConfigureRegions();
 
 			DisplayInfo();
         }
@@ -872,6 +872,7 @@ namespace OpenSim.Configuration
 			Console.WriteLine("GridCommon has been successfully configured");
 		}
 
+		///ConfigureosslEnable()
 		private static void ConfigureosslEnable()
 		{
 			CheckMyosslEnableConfig();
@@ -906,54 +907,21 @@ namespace OpenSim.Configuration
 		///ConfigureRegions()
 		private static void ConfigureRegions()
 		{
-			RegionConfigStatus status = CheckMyRegionsConfig();
-
-			if (status == RegionConfigStatus.OK)
-			{
-				Console.WriteLine("Your regions have been preserved."); 
-				return;
-			}
-
-			if (status == RegionConfigStatus.NeedsEditing)
-			{
-				Console.WriteLine("*** Warning: Master Avatar is obsolete.\nPlease edit file Regions/RegionConfig.ini and delete all references to MasterAvatar.");
-				return;
-			}
-
-			// else RegionConfigStatus.NeedsCreation
-			int count = 0;
+			CheckMyRegionsConfig();
 			try
 			{
-				using (TextReader tr = new StreamReader("Regions/RegionConfig.ini.example"))
+				using (TextReader tr = new StreamReader("Regions/Regions.ini.example"))
 				{
-					using (TextWriter tw = new StreamWriter("Regions/RegionConfig.ini"))
+					using (TextWriter tw = new StreamWriter("Regions/Regions.ini"))
 					{
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-							if (line.Contains("My Virtual World"))
-								line = line.Replace("My Virtual World", worldName);
-							if (line.Contains("RegionUUID"))
-								line = "RegionUUID = \"" + UUID.Random() + "\"";
-							if (line.Contains("Location"))
-							{
-								if (count == 0)
-								{
-									Random rand = new Random();
-									baseLocationX = rand.Next(1500 - 1024, 1500 + 1024);
-									baseLocationY = rand.Next(1500 - 1024, 1500 + 1024);
-									line = "Location = \"" + baseLocationX + "," + baseLocationY + "\"";
-								}
-								else if (count == 1)
-									line = "Location = \"" + baseLocationX + "," + (baseLocationY + 1) + "\"";
-								else if (count == 2)
-									line = "Location = \"" + (baseLocationX + 1) + "," + baseLocationY + "\"";
-								else if (count == 3)
-									line = "Location = \"" + (baseLocationX + 1) + "," + (baseLocationY + 1) + "\"";
-								count++;
-							}
-							if (line.Contains("SYSTEMIP"))
-								line = line.Replace("SYSTEMIP", ipAddress);
+							//ExternalHostName = SYSTEMIP
+							if (line.Contains("ExternalHostName"))
+							if (line.Contains("ExternalHostName"))
+								line = line.Replace("ExternalHostName = SYSTEMIP", "ExternalHostName = "+ipAddress);
+
 							tw.WriteLine(line);
 						}
 					}
@@ -961,15 +929,16 @@ namespace OpenSim.Configuration
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine("Error configuring RegionConfig " + e.Message);
+				Console.WriteLine("Error configuring Regions.ini " + e.Message);
 				return;
 			}
-			Console.WriteLine("Your regions have been successfully configured.");
+
+			Console.WriteLine("Regions.ini has been successfully configured");
 		}
 
-		// #############################################################################
+			// #############################################################################
 
-		private static void DisplayInfo()
+			private static void DisplayInfo()
         {
             Console.WriteLine("\n***************************************************");
             Console.WriteLine("Your Virtual World is " + worldName);
