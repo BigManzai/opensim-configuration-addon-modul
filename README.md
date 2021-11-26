@@ -22,9 +22,10 @@ MoneyServer.ini
 OpenSim.ini
 Robust.ini
 Robust.HG.ini
-StandaloneCommon.ini
+StandaloneCommon.ini failed
 GridCommon.ini
 osslEnable.ini
+Regions.ini failed
 ```
 ## TODO
 Das sollte schon mono kompatibel sein. - That should already be mono compatible. 
