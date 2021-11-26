@@ -15,6 +15,10 @@ Everything is not yet complete and some settings are still missing.
 ## Status
 Erster Test - first test
 
+mono OK
+
+.NET OK
+
 ## Was macht es:
 Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für:
 
