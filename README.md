@@ -1,12 +1,16 @@
 # opensim-configuration-addon-modul
 
-Grundmodul aus Diva d2 ohne Funktion, zum Aufbau einer gesteuerten Grid Konfiguration.
+Als erstes muss ich sagen das fast alle Konfigurationen erstellt werden.
 
-Es lässt sich aber so schon kompilieren.
+Mit der Einstellmöglichkeit Standalone, StandaloneHG, Grid, [GridHG] wird nur die OpenSim.ini entsprechend eingestellt.
 
-Basic module from Diva d2 without function, for setting up a controlled grid configuration.
+Es ist noch nicht alles komplett enthalten auch fehlen noch einige Einstellungen.
 
-But it can already be compiled like this. 
+First of all I have to say that almost all configurations are created.
+
+With the setting option Standalone, StandaloneHG, Grid, [GridHG] only the OpenSim.ini is set accordingly.
+
+Everything is not yet complete and some settings are still missing. 
 
 ## Status
 Erster Test - first test
