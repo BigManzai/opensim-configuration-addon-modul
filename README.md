@@ -1,4 +1,5 @@
 # opensim-configuration-addon-modul
+**Konfigurationsgenerator für den OpenSimulator. - Configuration generator for the OpenSimulator.**
 
 Als erstes muss ich sagen das fast alle Konfigurationen erstellt werden.
 
