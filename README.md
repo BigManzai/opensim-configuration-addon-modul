@@ -20,12 +20,10 @@ Hopefully it will create working configurations from your * .ini.example files f
 FlotsamCache.ini
 MoneyServer.ini
 OpenSim.ini
-Robust.ini
 Robust.HG.ini
 StandaloneCommon.ini
 GridCommon.ini
 osslEnable.ini
-Regions.ini
 ```
 ## TODO
 Das sollte schon mono kompatibel sein. - That should already be mono compatible. 
