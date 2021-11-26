@@ -16,9 +16,9 @@ Everything is not yet complete and some settings are still missing.
 ## Status
 Erster Test - first test
 
-mono OK
+mono OK - DotNET OK
 
-.NET OK
+External IP Setting in all config.
 
 ## Was macht es:
 Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für:
@@ -37,4 +37,4 @@ osslEnable.ini
 Regions.ini
 ```
 ## TODO
-Das sollte schon mono kompatibel sein. - That should already be mono compatible. 
+Verfeinerung der Einstellungen. - Refinement of the settings. 
