@@ -11,6 +11,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Version 0.0.1
+
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -65,19 +67,17 @@ namespace OpenSim.Configuration
 
 		public static void Main(string[] args)
         {
-            Console.WriteLine(Environment.Version);
-			
-            GetUserInput();
+			GetUserInput();
 
 			ConfigureFlotsamCache(); // OK
 			ConfigureMoneyServer(); // OK
 			ConfigureOpenSim(); // OK
 			ConfigureRobust(); // OK
 			ConfigureRobustHG(); // OK
-			//ConfigureStandaloneCommon();
+			ConfigureStandaloneCommon(); // OK
 			ConfigureGridCommon(); // OK
 			ConfigureosslEnable(); // OK aber leer
-			ConfigureRegions();
+			ConfigureRegions(); // OK aber leer
 
 			DisplayInfo();
         }
@@ -754,46 +754,100 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-							/*
-							[Const]
-							BaseURL = "http://127.0.0.1"
+							// 	       [Const]
+							// 	       BaseURL = "http://127.0.0.1"
+							if (line.Contains("BaseURL"))
+								if (line.Contains("http://127.0.0.1"))
+									line = line.Replace("http://127.0.0.1", "http://" + ipAddress + "");
 
-							; The public port of the server
-							PublicPort = "8002"
+							// 	       [ServiceList]
+							// 	       ; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
+							if (line.Contains("OfflineIMServiceConnector"))
+								if (line.Contains("OfflineIMServiceConnector"))
+									line = line.Replace("; OfflineIMServiceConnector", "OfflineIMServiceConnector");
+							// 	       ; GroupsServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.Groups.dll:GroupsServiceRobustConnector"
+							if (line.Contains("OfflineIMServiceConnector"))
+								if (line.Contains("GroupsServiceConnector"))
+									line = line.Replace("; GroupsServiceConnector", "GroupsServiceConnector");
+							// 	       ; BakedTextureService = "${Const|PrivatePort}/OpenSim.Server.Handlers.dll:XBakesConnector"
+							if (line.Contains("BakedTextureService"))
+								if (line.Contains("BakedTextureService"))
+									line = line.Replace("; BakedTextureService", "BakedTextureService");
+							// 	       ; UserProfilesServiceConnector = "${Const|PublicPort}/OpenSim.Server.Handlers.dll:UserProfilesConnector"
+							if (line.Contains("UserProfilesServiceConnector"))
+								if (line.Contains("UserProfilesServiceConnector"))
+									line = line.Replace("; UserProfilesServiceConnector", "UserProfilesServiceConnector");
+							// 	       ; HGGroupsServiceConnector = "${Const|PublicPort}/OpenSim.Addons.Groups.dll:HGGroupsServiceRobustConnector"
+							if (line.Contains("HGGroupsServiceConnector"))
+								if (line.Contains("HGGroupsServiceConnector"))
+									line = line.Replace("; HGGroupsServiceConnector", "HGGroupsServiceConnector");
 
-							; The private port of the server
-							PrivatePort = "8003"
+							// 	       [Hypergrid]
+							//	; HomeURI = "${Const|BaseURL}:${Const|PublicPort}"
+							if (line.Contains("HomeURI"))
+								if (line.Contains("HomeURI"))
+									line = line.Replace("; HomeURI =", "HomeURI =");
 
-							[ServiceList]
-							; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
-							; GroupsServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.Groups.dll:GroupsServiceRobustConnector"
-							; BakedTextureService = "${Const|PrivatePort}/OpenSim.Server.Handlers.dll:XBakesConnector"
-							; UserProfilesServiceConnector = "${Const|PublicPort}/OpenSim.Server.Handlers.dll:UserProfilesConnector"
-							; HGGroupsServiceConnector = "${Const|PublicPort}/OpenSim.Addons.Groups.dll:HGGroupsServiceRobustConnector"
+							//	; GatekeeperURI = "${Const|BaseURL}:${Const|PublicPort}"
+							if (line.Contains("GatekeeperURI"))
+								if (line.Contains("GatekeeperURI"))
+									line = line.Replace("; GatekeeperURI", "GatekeeperURI");
 
-							[Hypergrid]
-							; HomeURI = "${Const|BaseURL}:${Const|PublicPort}"
-							; GatekeeperURI = "${Const|BaseURL}:${Const|PublicPort}"
-							; GatekeeperURIAlias = "login.osgrid.org"
 
-							[DatabaseService]
-							StorageProvider = "OpenSim.Data.MySQL.dll"
-							ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
+							// 	       [GridInfoService]
+							//	gridname = "the lost continent of hippo"
+							if (line.Contains("gridname"))
+								if (line.Contains("gridname"))
+									line = line.Replace("the lost continent of hippo", worldName);
+							//	gridnick = "hippogrid"
+							if (line.Contains("gridnick"))
+								if (line.Contains("gridnick"))
+									line = line.Replace("gridnick = \"hippogrid\"", "gridnick = \"" + worldName + "\"");
 
-							[GridInfoService]
-							login = ${Const|BaseURL}:${Const|PublicPort}/
-							gridname = "the lost continent of hippo"
-							gridnick = "hippogrid"
-							;welcome = ${Const|BaseURL}/welcome
-							;economy = ${Const|BaseURL}/economy
-							;about = ${Const|BaseURL}/about
-							;register = ${Const|BaseURL}/register
-							;help = ${Const|BaseURL}/help
-							;password = ${Const|BaseURL}/password
-							; gatekeeper = ${Const|BaseURL}:${Const|PublicPort}/ 
-							*/
+							//	;welcome = ${Const|BaseURL}/welcome
+							if (line.Contains("welcome"))
+								if (line.Contains("welcome"))
+									line = line.Replace(";welcome = ${Const|BaseURL}/welcome", "welcome = ${Const|BaseURL}/");
 
-							// Hier einfügen
+							//	;economy = ${Const|BaseURL}/economy
+							if (line.Contains("economy"))
+								if (line.Contains("economy"))
+									line = line.Replace(";economy = ${Const|BaseURL}/economy", "economy = ${Const|BaseURL}/");
+
+							//	;about = ${Const|BaseURL}/about
+							if (line.Contains("about"))
+								if (line.Contains("about"))
+									line = line.Replace(";about = ${Const|BaseURL}/about", "about = ${Const|BaseURL}/");
+
+							//	;register = ${Const|BaseURL}/register
+							if (line.Contains("register"))
+								if (line.Contains("register"))
+									line = line.Replace(";register = ${Const|BaseURL}/register", "register = ${Const|BaseURL}/");
+
+							//	;help = ${Const|BaseURL}/help
+							if (line.Contains("help"))
+								if (line.Contains("help"))
+									line = line.Replace(";help = ${Const|BaseURL}/help", "help = ${Const|BaseURL}/");
+
+							//	;password = ${Const|BaseURL}/password
+							if (line.Contains("password"))
+								if (line.Contains("password"))
+									line = line.Replace(";password = ${Const|BaseURL}/password", "password = ${Const|BaseURL}/");
+							// 	       ; gatekeeper = ${Const|BaseURL}:${Const|PublicPort}/ 
+							// GatekeeperURIAlias
+							if (line.Contains("GatekeeperURIAlias"))
+								if (line.Contains("GatekeeperURIAlias"))
+									line = line.Replace("GatekeeperURIAlias", "; GatekeeperURIAlias");
+
+							// "${Const|BaseURL}:${Const|PublicPort}" ipAddress + 8002
+							if (line.Contains("PublicPort"))
+								if (line.Contains("PublicPort"))
+									line = line.Replace("${Const|BaseURL}:${Const|PublicPort}", ipAddress + ":8002");
+
+							//	"${Const|PrivURL}:${Const|PrivatePort}" ipAddress + 8003
+							if (line.Contains("PrivatePort"))
+								if (line.Contains("PrivatePort"))
+									line = line.Replace("${Const|PrivURL}:${Const|PrivatePort}", ipAddress + ":8003");
 
 							tw.WriteLine(line);
 						}
