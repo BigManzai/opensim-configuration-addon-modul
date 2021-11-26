@@ -11,7 +11,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Version 0.0.1
+// version = "Version 0.0.2";
 
 using System;
 using System.IO;
@@ -27,16 +27,16 @@ namespace OpenSim.Configuration
 {
     public class Configure
     {
-        private static string worldName = "My Virtual World";
+		private static string worldName = "My Virtual World";
         private static string dbHost = "localhost";
         private static string dbSchema = "opensim";
         private static string dbUser = "opensim";
         private static string dbPasswd = "secret";
-        private static string userFirst = "John";
-        private static string userLast = "Doe";
-        private static string userPasswd = "secret";
-        private static string userEmail = "admin@localhost";
-        private static string ipAddress = "127.0.0.1";
+		// private static string userFirst = "John";
+		// private static string userLast = "Doe";
+		// private static string userPasswd = "secret";
+		// private static string userEmail = "admin@localhost";
+		private static string ipAddress = "127.0.0.1";
 		private static string modus = "GridHG";
 
 		private enum RegionConfigStatus : uint
@@ -136,6 +136,7 @@ namespace OpenSim.Configuration
             if (ipAddress == string.Empty)
                 ipAddress = myIP;
 
+			/*
             Console.Write("User first name [John]: ");
             string input = Console.ReadLine();
             if (input != string.Empty)
@@ -155,8 +156,10 @@ namespace OpenSim.Configuration
             input = Console.ReadLine();
             if (input != string.Empty)
 				userEmail = input;
+			*/
 
-            Console.WriteLine("");
+			Console.WriteLine("\n***************************************************");
+			//Console.WriteLine("");
         }
 
 		// #############################################################################
@@ -495,7 +498,7 @@ namespace OpenSim.Configuration
 		{
 			CheckMyRobustConfig();
 
-			string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			//string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -609,7 +612,7 @@ namespace OpenSim.Configuration
 		{
 			CheckMyRobustHGConfig();
 
-			string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			//string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -743,7 +746,7 @@ namespace OpenSim.Configuration
 			
 			CheckMyStandaloneCommonConfig();
 
-			string connString = String.Format("ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			//string connString = String.Format("ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -868,7 +871,7 @@ namespace OpenSim.Configuration
 
 			CheckMyGridCommonConfig();
 
-			string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			//string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -962,30 +965,32 @@ namespace OpenSim.Configuration
 		private static void ConfigureRegions()
 		{
 			CheckMyRegionsConfig();
-			try
-			{
-				using (TextReader tr = new StreamReader("Regions/Regions.ini.example"))
-				{
-					using (TextWriter tw = new StreamWriter("Regions/Regions.ini"))
-					{
-						string line;
-						while ((line = tr.ReadLine()) != null)
-						{
-							//ExternalHostName = SYSTEMIP
-							if (line.Contains("ExternalHostName"))
-							if (line.Contains("ExternalHostName"))
-								line = line.Replace("ExternalHostName = SYSTEMIP", "ExternalHostName = "+ipAddress);
 
-							tw.WriteLine(line);
-						}
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("Error configuring Regions.ini " + e.Message);
-				return;
-			}
+			Guid UUID = Guid.NewGuid();
+
+			StreamWriter writer = File.CreateText("Regions/Regions.ini");
+
+			// Ein paar Einträge hineinschreiben
+			writer.WriteLine("[" + worldName + "]");
+			writer.WriteLine("RegionUUID = " + UUID);
+			writer.WriteLine("Location = 2500,2500");
+			writer.WriteLine("InternalAddress = 0.0.0.0");
+			writer.WriteLine("InternalPort = 9100");
+			writer.WriteLine("AllowAlternatePorts = False");
+			writer.WriteLine("ResolveAddress = False");
+			writer.WriteLine("ExternalHostName = " + ipAddress);
+			writer.WriteLine("SizeX = 512");
+			writer.WriteLine("SizeY = 512");
+			writer.WriteLine("SizeZ = 512");
+			writer.WriteLine("MaptileStaticUUID = " + UUID);
+			writer.WriteLine("NonPhysicalPrimMax = 512");
+			writer.WriteLine("PhysicalPrimMax = 64");
+			writer.WriteLine("; ClampPrimSize = false");
+			writer.WriteLine("MaxPrims = 100000");
+			writer.WriteLine("MaxAgents = 50");
+			writer.WriteLine("; MaxPrimsPerUser = -1");
+
+			writer.Close(); // Den Dateizugriff beenden
 
 			Console.WriteLine("Regions.ini has been successfully configured");
 		}
@@ -997,10 +1002,10 @@ namespace OpenSim.Configuration
             Console.WriteLine("\n***************************************************");
             Console.WriteLine("Your Virtual World is " + worldName);
             Console.WriteLine("Your loginuri is http://" + ipAddress + ":8002");
-            Console.WriteLine("You user account is:");
-            Console.WriteLine("  username: " + userFirst + " " + userLast);
-            Console.WriteLine("  passwd:   " + userPasswd +"\n");
-            Console.WriteLine("***************************************************\n");
+			//Console.WriteLine("You user account is:");
+			//Console.WriteLine("  username: " + userFirst + " " + userLast);
+			//Console.WriteLine("  passwd:   " + userPasswd +"\n");
+			Console.WriteLine("***************************************************\n");
             Console.Write("<Press enter to exit>");
             Console.ReadLine();
         }
