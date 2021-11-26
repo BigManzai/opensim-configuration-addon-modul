@@ -18,7 +18,7 @@ Erster Test - first test
 
 mono OK - DotNET OK
 
-External IP Setting in all config.
+Automatisch die Externe IP in allen Konfigurationen oder Manuell. - Automatically the external IP in all configurations or manually.
 
 ## Was macht es:
 Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für:
