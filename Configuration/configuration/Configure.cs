@@ -5,7 +5,7 @@
  * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ *LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -37,20 +37,6 @@ namespace OpenSim.Configuration
         private static string ipAddress = "127.0.0.1";
 		private static string modus = "GridHG";
 
-		/*
-        private static bool confirmationRequired = false;
-        private static bool myWorldReconfig = false;				
-		private static bool MoneyServerReconfig = false;
-		private static bool OpenSimReconfig = false;
-		private static bool RobustReconfig = false;
-		private static bool RobustHGReconfig = false;
-		private static bool StandaloneCommonReconfig = false;
-		private static bool GridCommonReconfig = false;
-		private static bool osslEnableReconfig = false;
-		private static bool FlotsamCacheReconfig = false;
-		//private static bool RegionsReconfig = false;
-		*/
-
 		private enum RegionConfigStatus : uint
         {
             OK = 0,
@@ -58,7 +44,7 @@ namespace OpenSim.Configuration
             NeedsEditing = 2
         }
 
-		/// <summary> Manni
+		/// <summary>
 		/// IP ermitteln
 		/// </summary>
 		/// <returns></returns>
@@ -75,138 +61,6 @@ namespace OpenSim.Configuration
 			string[] a3 = a2.Split('<');
 			string a4 = a3[0];
 			return a4;
-		}
-
-		public int GetLineNumberA(string lineToFind, string datei)
-		{
-			int lineNum = 0;
-			string line;
-			System.IO.StreamReader file = new System.IO.StreamReader(datei);
-			while ((line = file.ReadLine()) != null)
-			{
-				lineNum++;
-				if (line.Contains(lineToFind))
-				{
-					return lineNum;
-				}
-			}
-			file.Close();
-			return -1;
-		}
-		public static int GetLineNumberB(string text, string lineToFind, StringComparison comparison = StringComparison.CurrentCulture)
-		{
-			int lineNum = 0;
-			using (StringReader reader = new StringReader(text))
-			{
-				string line;
-				while ((line = reader.ReadLine()) != null)
-				{
-					lineNum++;
-					if (line.Equals(lineToFind, comparison))
-						return lineNum;
-				}
-			}
-			return -1;
-		}
-		public static void WriteLineConsole()
-		{
-			Console.WriteLine();
-			Console.WriteLine($"NewLine: {Environment.NewLine}  first line{Environment.NewLine}  second line");
-		}
-
-		/// <summary>
-		/// Zeile löschen - File_DeleteLine(1, OpenSim.ini)
-		/// </summary>
-		/// <param name="Line"></param>
-		/// <param name="Path"></param>
-		private static void File_DeleteLine(int Line, string Path)
-		{
-			StringBuilder sb = new StringBuilder();
-			using (StreamReader sr = new StreamReader(Path))
-			{
-				int Countup = 0;
-				while (!sr.EndOfStream)
-				{
-					Countup++;
-					if (Countup != Line)
-					{
-						using (StringWriter sw = new StringWriter(sb))
-						{
-							sw.WriteLine(sr.ReadLine());
-						}
-					}
-					else
-					{
-						sr.ReadLine();
-					}
-				}
-			}
-			using (StreamWriter sw = new StreamWriter(Path))
-			{
-				sw.Write(sb.ToString());
-			}
-		}
-
-		/// <summary>
-		/// IniDeleteP(string file, string contain)
-		/// </summary>
-		/// <param name="file"></param>
-		/// <param name="contain"></param>
-		private static void IniDelete(string file, string contain)
-		{
-			string file2 = file + ".ini";
-			string tempFile = Path.GetTempFileName();
-
-		using(var sr = new StreamReader(file2))
-		using(var sw = new StreamWriter(tempFile))
-		{
-			string line;
-
-			while((line = sr.ReadLine()) != null)
-			{
-				 if(line != contain) sw.WriteLine(line);
-			}
-		}
-
-		File.Delete("file2");
-		File.Move(tempFile, "file2");
-		}
-
-		// WriteLine()
-		// ReadLine()
-
-		/// <summary> Manni
-		/// IniWrite("file", "contain", "replacefrom", "replaceto");
-		/// </summary>
-		/// <param name="file"></param>
-		/// <param name="contain"></param>
-		/// <param name="replacefrom"></param>
-		/// <param name="replaceto"></param>
-		private static void IniWrite(string file, string contain, string replacefrom, string replaceto)
-		{
-			string examplefile = file + ".ini.example";
-			string file2 = file + ".ini";
-			try
-			{
-				using (TextReader tr = new StreamReader(examplefile))
-				{
-					using (TextWriter tw = new StreamWriter(file2))
-					{
-						string line;
-						while ((line = tr.ReadLine()) != null)
-						{
-							if (line.Contains(contain))	line = line.Replace(replacefrom, replaceto);
-							tw.WriteLine(line);
-						}
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("Error configuring " + e.Message);
-				return;
-			}
-			Console.WriteLine(contain + " has been successfully configured");
 		}
 
 		public static void Main(string[] args)
@@ -305,6 +159,8 @@ namespace OpenSim.Configuration
             Console.WriteLine("");
         }
 
+		// #############################################################################
+
 		private static void CheckMyMoneyServerConfig()
 		{
 			if (File.Exists("MoneyServer.ini"))
@@ -317,12 +173,9 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//MoneyServerReconfig = true;
 			}
 		}
 
-		// FlotsamCache.ini.example
 		private static void CheckMyFlotsamCacheConfig()
 		{
 			if (File.Exists("FlotsamCache.ini"))
@@ -335,8 +188,6 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//FlotsamCacheReconfig = true;
 			}
 		}
 
@@ -352,8 +203,6 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//OpenSimReconfig = true;
 			}
 		}
 
@@ -369,8 +218,6 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//RobustReconfig = true;
 			}
 		}
 
@@ -386,8 +233,6 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//RobustHGReconfig = true;
 			}
 		}
 
@@ -403,8 +248,6 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//StandaloneCommonReconfig = true;
 			}
 		}
 
@@ -420,8 +263,6 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//osslEnableReconfig = true;
 			}
 		}
 
@@ -437,12 +278,9 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				//GridCommonReconfig = true;
 			}
 		}
 
-		/*
 		private static void CheckMyRegionsConfig()
 		{
 			if (File.Exists("Regions/Regions.ini"))
@@ -455,15 +293,11 @@ namespace OpenSim.Configuration
 				{
 					// ignore and proceed
 				}
-
-				RegionsReconfig = true;
 			}
-		} */
+		}
 
+		// #############################################################################
 
-
-
-	
 		///ConfigureFlotsamCache
 		private static void ConfigureFlotsamCache()
 		{
@@ -1070,7 +904,6 @@ namespace OpenSim.Configuration
 		}
 
 		///ConfigureRegions()
-		/*
 		private static void ConfigureRegions()
 		{
 			RegionConfigStatus status = CheckMyRegionsConfig();
@@ -1132,9 +965,9 @@ namespace OpenSim.Configuration
 				return;
 			}
 			Console.WriteLine("Your regions have been successfully configured.");
-		} */
+		}
 
-
+		// #############################################################################
 
 		private static void DisplayInfo()
         {
