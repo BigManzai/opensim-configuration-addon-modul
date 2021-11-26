@@ -58,13 +58,162 @@ namespace OpenSim.Configuration
             NeedsEditing = 2
         }
 
-        public static void Main(string[] args)
+		/// <summary> Manni
+		/// IP ermitteln
+		/// </summary>
+		/// <returns></returns>
+		public static string GetPublicIP()
+		{
+			// IP ermitteln
+			string url = "http://checkip.dyndns.org";
+			System.Net.WebRequest req = System.Net.WebRequest.Create(url);
+			System.Net.WebResponse resp = req.GetResponse();
+			System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+			string response = sr.ReadToEnd().Trim();
+			string[] a = response.Split(':');
+			string a2 = a[1].Substring(1);
+			string[] a3 = a2.Split('<');
+			string a4 = a3[0];
+			return a4;
+		}
+
+		public int GetLineNumberA(string lineToFind, string datei)
+		{
+			int lineNum = 0;
+			string line;
+			System.IO.StreamReader file = new System.IO.StreamReader(datei);
+			while ((line = file.ReadLine()) != null)
+			{
+				lineNum++;
+				if (line.Contains(lineToFind))
+				{
+					return lineNum;
+				}
+			}
+			file.Close();
+			return -1;
+		}
+		public static int GetLineNumberB(string text, string lineToFind, StringComparison comparison = StringComparison.CurrentCulture)
+		{
+			int lineNum = 0;
+			using (StringReader reader = new StringReader(text))
+			{
+				string line;
+				while ((line = reader.ReadLine()) != null)
+				{
+					lineNum++;
+					if (line.Equals(lineToFind, comparison))
+						return lineNum;
+				}
+			}
+			return -1;
+		}
+		public static void WriteLineConsole()
+		{
+			Console.WriteLine();
+			Console.WriteLine($"NewLine: {Environment.NewLine}  first line{Environment.NewLine}  second line");
+		}
+
+		/// <summary>
+		/// Zeile löschen - File_DeleteLine(1, OpenSim.ini)
+		/// </summary>
+		/// <param name="Line"></param>
+		/// <param name="Path"></param>
+		private static void File_DeleteLine(int Line, string Path)
+		{
+			StringBuilder sb = new StringBuilder();
+			using (StreamReader sr = new StreamReader(Path))
+			{
+				int Countup = 0;
+				while (!sr.EndOfStream)
+				{
+					Countup++;
+					if (Countup != Line)
+					{
+						using (StringWriter sw = new StringWriter(sb))
+						{
+							sw.WriteLine(sr.ReadLine());
+						}
+					}
+					else
+					{
+						sr.ReadLine();
+					}
+				}
+			}
+			using (StreamWriter sw = new StreamWriter(Path))
+			{
+				sw.Write(sb.ToString());
+			}
+		}
+
+		/// <summary>
+		/// IniDeleteP(string file, string contain)
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="contain"></param>
+		private static void IniDelete(string file, string contain)
+		{
+			string file2 = file + ".ini";
+			string tempFile = Path.GetTempFileName();
+
+		using(var sr = new StreamReader(file2))
+		using(var sw = new StreamWriter(tempFile))
+		{
+			string line;
+
+			while((line = sr.ReadLine()) != null)
+			{
+				 if(line != contain) sw.WriteLine(line);
+			}
+		}
+
+		File.Delete("file2");
+		File.Move(tempFile, "file2");
+		}
+
+		// WriteLine()
+		// ReadLine()
+
+		/// <summary> Manni
+		/// IniWrite("file", "contain", "replacefrom", "replaceto");
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="contain"></param>
+		/// <param name="replacefrom"></param>
+		/// <param name="replaceto"></param>
+		private static void IniWrite(string file, string contain, string replacefrom, string replaceto)
+		{
+			string examplefile = file + ".ini.example";
+			string file2 = file + ".ini";
+			try
+			{
+				using (TextReader tr = new StreamReader(examplefile))
+				{
+					using (TextWriter tw = new StreamWriter(file2))
+					{
+						string line;
+						while ((line = tr.ReadLine()) != null)
+						{
+							if (line.Contains(contain))	line = line.Replace(replacefrom, replaceto);
+							tw.WriteLine(line);
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("Error configuring " + e.Message);
+				return;
+			}
+			Console.WriteLine(contain + " has been successfully configured");
+		}
+
+		public static void Main(string[] args)
         {
             Console.WriteLine(Environment.Version);
 			
             GetUserInput();
-
-			//ConfigureTest();
 
 			ConfigureFlotsamCache();
 			ConfigureMoneyServer(); // OK
@@ -74,10 +223,7 @@ namespace OpenSim.Configuration
 			//ConfigureStandaloneCommon();
 			ConfigureGridCommon(); // OK
 			ConfigureosslEnable();
-
-
 			//ConfigureRegions();
-
 
 			DisplayInfo();
         }
@@ -99,6 +245,7 @@ namespace OpenSim.Configuration
 
 
 			string tmp;
+			string myIP = GetPublicIP();
 
 			Console.Write("Standalone, StandaloneHG, Grid, [GridHG]: ");
 			modus = Console.ReadLine();
@@ -130,10 +277,10 @@ namespace OpenSim.Configuration
             Console.Write("MySql database password: ");
             dbPasswd = Console.ReadLine();
 
-            Console.Write("Your external domain name or IP address: ");
+			Console.Write("Your external domain name or IP address: [" + myIP + "] ");
             ipAddress = Console.ReadLine();
             if (ipAddress == string.Empty)
-                ipAddress = "127.0.0.1";
+                ipAddress = myIP;
 
             Console.Write("User first name [John]: ");
             string input = Console.ReadLine();
@@ -154,11 +301,6 @@ namespace OpenSim.Configuration
             input = Console.ReadLine();
             if (input != string.Empty)
 				userEmail = input;
-
-            /* Console.Write("User account creation [o]pen or [c]ontrolled [c]: ");
-            string conf = Console.ReadLine();
-            if (conf != string.Empty && conf[0] == 'c')
-                    confirmationRequired = true; */
 
             Console.WriteLine("");
         }
@@ -198,8 +340,6 @@ namespace OpenSim.Configuration
 			}
 		}
 
-
-
 		private static void CheckMyOpenSimConfig()
 		{
 			if (File.Exists("OpenSim.ini"))
@@ -216,7 +356,6 @@ namespace OpenSim.Configuration
 				//OpenSimReconfig = true;
 			}
 		}
-
 
 		private static void CheckMyRobustConfig()
 		{
@@ -322,54 +461,41 @@ namespace OpenSim.Configuration
 		} */
 
 
-		private static void ConfigureTest()
-		{
-
-			//Write
-			// DefaultVolume=100 im Bereich Audio setzen
 
 
-
-			/*
-			MoneyServer
-			OpenSim
-			Robust
-			RobustHG
-			StandaloneCommon
-			GridCommon
-			osslEnable
-			Regions
-			*/
-
-			// Schreiben:
-
-
-			// Lesen:
-
-
-						
-			// Wert auskommentieren:
-
-
-
-
-			// Key Löschen:
-
-
-			Console.WriteLine("Test beendet!!!");
-			//Console.ReadLine(); // Warte auf Return/Enter
-		}
-
-
-
-		// ConfigureFlotsamCache
+	
+		///ConfigureFlotsamCache
 		private static void ConfigureFlotsamCache()
 		{
 			// FlotsamCache.ini.example
 			CheckMyFlotsamCacheConfig();
+			try
+			{
+				using (TextReader tr = new StreamReader("config-include/FlotsamCache.ini.example"))
+				{
+					using (TextWriter tw = new StreamWriter("config-include/FlotsamCache.ini"))
+					{
+						string line;
+						while ((line = tr.ReadLine()) != null)
+						{
+							//LogLevel = 0
 
+							if (line.Contains("LogLevel"))
+								if (line.Contains("LogLevel"))
+									line = line.Replace("LogLevel = 0", "LogLevel = 0");
 
-			Console.WriteLine("MoneyServer has been successfully configured");
+							tw.WriteLine(line);
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("Error configuring FlotsamCache " + e.Message);
+				return;
+			}
+
+			Console.WriteLine("FlotsamCache has been successfully configured");
 		}
 
 		///ConfigureMoneyServer OK
@@ -431,6 +557,7 @@ namespace OpenSim.Configuration
 				Console.WriteLine("Error configuring MyWorld " + e.Message);
 				return;
 			}
+
 			Console.WriteLine("MoneyServer has been successfully configured");
 		}
 		
@@ -466,12 +593,12 @@ namespace OpenSim.Configuration
 							//	   [ClientStack.LindenUDP]
 							//	   ; DisableFacelights = "false"
 							if (line.Contains("DisableFacelights"))
-                                line = line.Replace("; DisableFacelights", "DisableFacelights");
+                                line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"");
 														
 							//	   [LightShare]
 							//	   ; enable_windlight = false
 							if (line.Contains("enable_windlight"))
-								line = line.Replace("; enable_windlight =", "enable_windlight = true");
+								line = line.Replace("; enable_windlight = false", "enable_windlight = true");
 
 							//	   [Materials]
 							//	   ; MaxMaterialsPerTransaction = 50
@@ -481,15 +608,20 @@ namespace OpenSim.Configuration
 							//	   [DataSnapshot]
 							//	   ; gridname = "OSGrid"
 							if (line.Contains("gridname"))
-								line = line.Replace("; gridname", "gridname");
+								line = line.Replace("; gridname = \"OSGrid\"", "gridname = \""+ worldName+"\"");
 
 							//	   [Terrain]
 							//	   ; InitialTerrain = "pinhead-island"
 							if (line.Contains("pinhead-island"))
 								line = line.Replace("; InitialTerrain", "InitialTerrain");
 								line = line.Replace("pinhead-island", "flat");
-							//	   [Architecture]
 
+							// [XBakes]
+							// ;; URL = ${Const|PrivURL}:${Const|PrivatePort}
+							if (line.Contains("XBakes"))
+								line = line.Replace(";; URL = ${Const|PrivURL}:${Const|PrivatePort}", "URL = ${Const|PrivURL}:${Const|PrivatePort}");							
+
+							//	   [Architecture]
 							// modus = "Standalone, StandaloneHG, Grid, [GridHG]
 							if (line.Contains("Include-Architecture"))
 								if ( modus == "Standalone" )
@@ -520,16 +652,6 @@ namespace OpenSim.Configuration
 				Console.WriteLine("Error configuring MyWorld " + e.Message);
 				return;
 			}
-
-			// Test
-
-			//var OpenSimIni = new IniFile("OpenSim.ini");
-			//	   DisableFacelights = "false"
-			//OpenSimIni.Write("DisableFacelights ", " true", "ClientStack.LindenUDP");
-			//	   gridname = "OSGrid"
-			//OpenSimIni.Write("gridname ", " " + '"' + worldName + '"', "DataSnapshot");
-
-			// Test Ende
 
 			Console.WriteLine("OpenSim has been successfully configured");
 		}
@@ -570,7 +692,7 @@ namespace OpenSim.Configuration
 		{
 			CheckMyRobustHGConfig();
 
-			string connString = String.Format("\"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -584,9 +706,9 @@ namespace OpenSim.Configuration
 
 							//	[Const]
 							//	BaseURL = "http://127.0.0.1"
-							//if (line.Contains("BaseURL"))
-								//if (line.Contains("http://127.0.0.1"))
-									//line = line.Replace("http://127.0.0.1", '"'+"http://"+ipAddress+'"');
+							if (line.Contains("BaseURL"))
+								if (line.Contains("http://127.0.0.1"))
+									line = line.Replace("http://127.0.0.1","http://"+ipAddress+"");
 
 							//	[ServiceList]
 							//	; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
@@ -628,8 +750,11 @@ namespace OpenSim.Configuration
 							//	[DatabaseService]
 							//	StorageProvider = "OpenSim.Data.MySQL.dll"
 							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
-							//if (line.Contains("ConnectionString"))
-								//line = connString;
+							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
+							// dbHost dbSchema dbUser dbPasswd
+							if (line.Contains("ConnectionString"))
+								if (line.Contains("ConnectionString"))
+									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
 
 							//	[GridInfoService]
 							//	gridname = "the lost continent of hippo"
@@ -637,10 +762,10 @@ namespace OpenSim.Configuration
 								if (line.Contains("gridname"))
 									line = line.Replace("the lost continent of hippo", worldName);
 
-							//	gridnick = gridnick"
+							//	gridnick = "hippogrid"
 							if (line.Contains("gridnick"))
 								if (line.Contains("gridnick"))
-									line = line.Replace("; gridnick", worldName);
+									line = line.Replace("gridnick = \"hippogrid\"", "gridnick = \"" + worldName +"\"");
 
 							//	;welcome = ${Const|BaseURL}/welcome
 							if (line.Contains("welcome"))
@@ -689,22 +814,23 @@ namespace OpenSim.Configuration
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine("Error configuring MyWorld " + e.Message);
+				Console.WriteLine("Error configuring Robust.HG.ini " + e.Message);
 				return;
 			}
 
-			//var RobustHGIni = new IniFile("Robust.HG.ini");
-			//	[Const]
-			//	BaseURL = "http://127.0.0.1"
-			//RobustIni.Write("BaseURL ", ipAddress, "Const");
-			//RobustHGIni.Write("BaseURL ", " " + '"' + "http://" + ipAddress + '"', "Const");
+
 			//	[DatabaseService]
 			//	StorageProvider = "OpenSim.Data.MySQL.dll"
 			//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
+			// dbHost dbSchema dbUser dbPasswd
+			// "Data Source="+dbHost+";Database="+dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
 			//if (line.Contains("ConnectionString"))
 			//line = connString;
 			//RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
 			//RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
+			// Test: IniWrite(file, contain, replacefrom, replaceto);
+
+			//IniWrite("Robust.HG", "ConnectionString", "\"Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;\"", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
 
 
 
@@ -789,7 +915,7 @@ namespace OpenSim.Configuration
 
 			CheckMyGridCommonConfig();
 
-			string connString = String.Format("\"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -800,19 +926,28 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-
-							if (line.Contains("GatekeeperURI"))
-								if (line.Contains("GatekeeperURI"))
-									line = line.Replace("; GatekeeperURI", "GatekeeperURI");
-
-							if (line.Contains("GatekeeperURI"))
-								if (line.Contains("GatekeeperURI"))
-									line = line.Replace("; GatekeeperURI", "GatekeeperURI");
-
+							/*
+							//[DatabaseService]
 							//Include-Storage = "config-include/storage/SQLiteStandalone.ini";
-							if (line.Contains("Include-Storage"))
-								if (line.Contains("Include-Storage"))
+							if (line.Contains("ConnectionString"))
+								if (line.Contains("ConnectionString"))
 									line = line.Replace("Include-Storage", "; Include-Storage");
+									line = line.Replace(";StorageProvider", "StorageProvider");
+									line = line.Replace(";ConnectionString", "ConnectionString");
+
+							//	[DatabaseService]
+							//	StorageProvider = "OpenSim.Data.MySQL.dll"
+							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
+							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
+							// dbHost dbSchema dbUser dbPasswd
+							if (line.Contains("ConnectionString"))
+								if (line.Contains("ConnectionString"))
+									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
+							*/
+
+							if (line.Contains("GatekeeperURI"))
+								if (line.Contains("GatekeeperURI"))
+									line = line.Replace("; GatekeeperURI =", "GatekeeperURI =");
 
 							// "${Const|BaseURL}:${Const|PublicPort}" ipAddress + 8002
 							if (line.Contains("PublicPort"))
@@ -823,32 +958,6 @@ namespace OpenSim.Configuration
 							if (line.Contains("PrivatePort"))
 								if (line.Contains("PrivatePort"))
 									line = line.Replace("${Const|PrivURL}:${Const|PrivatePort}", ipAddress + ":8003");
-
-
-							/*
-							[DatabaseService]
-							Include-Storage = "config-include/storage/SQLiteStandalone.ini";
-							;StorageProvider = "OpenSim.Data.MySQL.dll"
-							;ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=***;Old Guids=true;SslMode=None;"
-
-							[Hypergrid]
-							; GatekeeperURI = "${Const|BaseURL}:${Const|PublicPort}"
-
-							[HGInventoryAccessModule]
-							; OutboundPermission = True
-							;RestrictInventoryAccessAbroad = True
-							; RegionHGAssetServerURI = ${Const|BaseURL}:${Const|PublicPort}
-
-							[HGFriendsModule]
-							;LevelHGFriends = 0;
-
-							[Zum schluss Alles richtig setzen oder Const einfügen.]
-
-							"${Const|BaseURL}:${Const|PublicPort}"
-							"${Const|PrivURL}:${Const|PrivatePort}"
-							*/
-
-
 
 							tw.WriteLine(line);
 						}
@@ -861,12 +970,38 @@ namespace OpenSim.Configuration
 				return;
 			}
 
-			//var RobustHGIni = new IniFile("config-include/GridCommon.ini");
-
-			//RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
-			//RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
-
 			Console.WriteLine("GridCommon has been successfully configured");
+		}
+
+		private static void ConfigureosslEnable()
+		{
+			CheckMyosslEnableConfig();
+
+			try
+			{
+				using (TextReader tr = new StreamReader("config-include/osslEnable.ini.example"))
+				{
+					using (TextWriter tw = new StreamWriter("config-include/osslEnable.ini"))
+					{
+						string line;
+						while ((line = tr.ReadLine()) != null)
+						{
+
+							tw.WriteLine(line);
+						}
+					}
+				}
+			}
+
+
+			catch (Exception e)
+			{
+				Console.WriteLine("Error configuring osslEnable " + e.Message);
+				return;
+			}
+
+
+			Console.WriteLine("osslEnable has been successfully configured");
 		}
 
 		///ConfigureRegions()
@@ -934,36 +1069,7 @@ namespace OpenSim.Configuration
 			Console.WriteLine("Your regions have been successfully configured.");
 		} */
 
-		private static void ConfigureosslEnable()
-		{
-			CheckMyosslEnableConfig();
 
-			try
-			{
-				using (TextReader tr = new StreamReader("config-include/osslEnable.ini.example"))
-				{
-					using (TextWriter tw = new StreamWriter("config-include/osslEnable.ini"))
-					{
-						string line;
-						while ((line = tr.ReadLine()) != null)
-						{
-
-							tw.WriteLine(line);
-						}
-					}
-				}
-			}
-
-
-			catch (Exception e)
-			{
-				Console.WriteLine("Error configuring osslEnable " + e.Message);
-				return;
-			}
-
-
-			Console.WriteLine("osslEnable has been successfully configured");
-		}
 
 		private static void DisplayInfo()
         {
