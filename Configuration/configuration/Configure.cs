@@ -218,7 +218,7 @@ namespace OpenSim.Configuration
 			ConfigureFlotsamCache();
 			ConfigureMoneyServer(); // OK
 			ConfigureOpenSim(); // OK
-			//ConfigureRobust();
+			ConfigureRobust();
 			ConfigureRobustHG(); // OK
 			//ConfigureStandaloneCommon();
 			ConfigureGridCommon(); // OK
@@ -661,7 +661,7 @@ namespace OpenSim.Configuration
 		{
 			CheckMyRobustConfig();
 
-			string connString = String.Format("ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
+			string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
 
 			try
 			{
@@ -672,7 +672,90 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-						// Hier einfügen
+
+							//	[Const]
+							//	BaseURL = "http://127.0.0.1"
+							if (line.Contains("BaseURL"))
+								if (line.Contains("http://127.0.0.1"))
+									line = line.Replace("http://127.0.0.1", "http://" + ipAddress + "");
+
+							//	[ServiceList]
+							//	; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
+							if (line.Contains("OfflineIMServiceConnector"))
+								if (line.Contains("OfflineIMServiceConnector"))
+									line = line.Replace("; OfflineIMServiceConnector", "OfflineIMServiceConnector");
+
+							//	; GroupsServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.Groups.dll:GroupsServiceRobustConnector"
+							if (line.Contains("GroupsServiceConnector"))
+								if (line.Contains("GroupsServiceConnector"))
+									line = line.Replace("; GroupsServiceConnector", "GroupsServiceConnector");
+
+							//	; BakedTextureService = "${Const|PrivatePort}/OpenSim.Server.Handlers.dll:XBakesConnector"
+							if (line.Contains("BakedTextureService"))
+								if (line.Contains("BakedTextureService"))
+									line = line.Replace("; BakedTextureService", "BakedTextureService");
+
+							//	; UserProfilesServiceConnector = "${Const|PublicPort}/OpenSim.Server.Handlers.dll:UserProfilesConnector"
+							if (line.Contains("UserProfilesServiceConnector"))
+								if (line.Contains("UserProfilesServiceConnector"))
+									line = line.Replace("; UserProfilesServiceConnector", "UserProfilesServiceConnector");
+
+							//	; GroupsServiceConnector = "${Const|PublicPort}/OpenSim.Addons.Groups.dll:HGGroupsServiceRobustConnector"
+							if (line.Contains("GroupsServiceConnector"))
+								if (line.Contains("GroupsServiceConnector"))
+									line = line.Replace("; GroupsServiceConnector", "GroupsServiceConnector");
+
+							//	[DatabaseService]
+							//	StorageProvider = "OpenSim.Data.MySQL.dll"
+							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
+							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
+							// dbHost dbSchema dbUser dbPasswd
+							if (line.Contains("ConnectionString"))
+								if (line.Contains("ConnectionString"))
+									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
+
+							//	[GridInfoService]
+							//	gridname = "the lost continent of hippo"
+							if (line.Contains("gridname"))
+								if (line.Contains("gridname"))
+									line = line.Replace("the lost continent of hippo", worldName);
+
+							//	gridnick = "hippogrid"
+							if (line.Contains("gridnick"))
+								if (line.Contains("gridnick"))
+									line = line.Replace("gridnick = \"hippogrid\"", "gridnick = \"" + worldName + "\"");
+
+							//	;welcome = ${Const|BaseURL}/welcome
+							if (line.Contains("welcome"))
+								if (line.Contains("welcome"))
+									line = line.Replace(";welcome = ${Const|BaseURL}/welcome", "welcome = ${Const|BaseURL}/");
+
+							//	;economy = ${Const|BaseURL}/economy
+							if (line.Contains("economy"))
+								if (line.Contains("economy"))
+									line = line.Replace(";economy = ${Const|BaseURL}/economy", "economy = ${Const|BaseURL}/");
+
+							//	;about = ${Const|BaseURL}/about
+							if (line.Contains("about"))
+								if (line.Contains("about"))
+									line = line.Replace(";about = ${Const|BaseURL}/about", "about = ${Const|BaseURL}/");
+
+							//	;register = ${Const|BaseURL}/register
+							if (line.Contains("register"))
+								if (line.Contains("register"))
+									line = line.Replace(";register = ${Const|BaseURL}/register", "register = ${Const|BaseURL}/");
+
+							//	;help = ${Const|BaseURL}/help
+							if (line.Contains("help"))
+								if (line.Contains("help"))
+									line = line.Replace(";help = ${Const|BaseURL}/help", "help = ${Const|BaseURL}/");
+
+							//	;password = ${Const|BaseURL}/password
+							if (line.Contains("password"))
+								if (line.Contains("password"))
+									line = line.Replace(";password = ${Const|BaseURL}/password", "password = ${Const|BaseURL}/");
+
+
 
 							tw.WriteLine(line);
 						}
@@ -681,12 +764,12 @@ namespace OpenSim.Configuration
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine("Error configuring MyWorld " + e.Message);
+				Console.WriteLine("Error configuring Robust.HG.ini " + e.Message);
 				return;
 			}
 			Console.WriteLine("Robust has been successfully configured");
 		}
-		
+
 		///ConfigureRobustHG()
 		private static void ConfigureRobustHG()
 		{
@@ -817,24 +900,6 @@ namespace OpenSim.Configuration
 				Console.WriteLine("Error configuring Robust.HG.ini " + e.Message);
 				return;
 			}
-
-
-			//	[DatabaseService]
-			//	StorageProvider = "OpenSim.Data.MySQL.dll"
-			//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
-			// dbHost dbSchema dbUser dbPasswd
-			// "Data Source="+dbHost+";Database="+dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
-			//if (line.Contains("ConnectionString"))
-			//line = connString;
-			//RobustHGIni.Write("StorageProvider ", " " + '"' + "OpenSim.Data.MySQL.dll" + '"', "DatabaseService");
-			//RobustHGIni.Write("ConnectionString ", " " + connString, "DatabaseService");
-			// Test: IniWrite(file, contain, replacefrom, replaceto);
-
-			//IniWrite("Robust.HG", "ConnectionString", "\"Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;\"", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
-
-
-
-
 			Console.WriteLine("RobustHG has been successfully configured");
 		}
 		
