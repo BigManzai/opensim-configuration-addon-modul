@@ -11,45 +11,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// version = "Version 0.0.2";
+// version = "Version 0.0.3";
 
 using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using OpenMetaverse;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+
 
 namespace OpenSim.Configuration
 {
     public class Configure
     {
+		/// voreinstellungen
 		private static string worldName = "My Virtual World";
         private static string dbHost = "localhost";
         private static string dbSchema = "opensim";
         private static string dbUser = "opensim";
         private static string dbPasswd = "secret";
-		// private static string userFirst = "John";
-		// private static string userLast = "Doe";
-		// private static string userPasswd = "secret";
-		// private static string userEmail = "admin@localhost";
 		private static string ipAddress = "127.0.0.1";
 		private static string modus = "GridHG";
-
-		private enum RegionConfigStatus : uint
-        {
-            OK = 0,
-            NeedsCreation = 1,
-            NeedsEditing = 2
-        }
-
-		/// <summary>
+		private static string regionSize = "256";
+		private static string regionName = "Welcome";
+		private static string location = "2500,2500";
+		
 		/// IP ermitteln
-		/// </summary>
-		/// <returns></returns>
 		public static string GetPublicIP()
 		{
 			// IP ermitteln
@@ -65,6 +49,7 @@ namespace OpenSim.Configuration
 			return a4;
 		}
 
+		/// start
 		public static void Main(string[] args)
         {
 			GetUserInput();
@@ -81,7 +66,8 @@ namespace OpenSim.Configuration
 
 			DisplayInfo();
         }
-
+		
+		/// User input
         private static void GetUserInput()
         {
 			// Benötigte Standart Vorgaben:
@@ -96,6 +82,10 @@ namespace OpenSim.Configuration
 			// adminPasswd="secret"X
 			// adminEmail="admin@localhost"
 			// adminUUID="00000000-0000-0000-0000-000000000000"
+
+			//Startregion
+			//Regionsname
+			//Regionsgröße
 
 
 			string tmp;
@@ -136,6 +126,21 @@ namespace OpenSim.Configuration
             if (ipAddress == string.Empty)
                 ipAddress = myIP;
 
+			Console.Write("region name [Welcome]: ");
+			tmp = Console.ReadLine();
+			if (tmp != string.Empty)
+				regionName = tmp;
+
+			Console.Write("Location = 2500,2500: ");
+			tmp = Console.ReadLine();
+			if (tmp != string.Empty)
+				location = tmp;
+
+			Console.Write("region size [256]: ");
+			tmp = Console.ReadLine();
+			if (tmp != string.Empty)
+				regionSize = tmp;
+
 			/*
             Console.Write("User first name [John]: ");
             string input = Console.ReadLine();
@@ -164,148 +169,9 @@ namespace OpenSim.Configuration
 
 		// #############################################################################
 
-		private static void CheckMyMoneyServerConfig()
-		{
-			if (File.Exists("MoneyServer.ini"))
-			{
-				try
-				{
-					File.Copy("MoneyServer.ini.example", "MoneyServer.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyFlotsamCacheConfig()
-		{
-			if (File.Exists("FlotsamCache.ini"))
-			{
-				try
-				{
-					File.Copy("FlotsamCache.ini.example", "FlotsamCache.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyOpenSimConfig()
-		{
-			if (File.Exists("OpenSim.ini"))
-			{
-				try
-				{
-					File.Copy("OpenSim.ini.example", "OpenSim.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyRobustConfig()
-		{
-			if (File.Exists("Robust.ini"))
-			{
-				try
-				{
-					File.Copy("Robust.ini.example", "Robust.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyRobustHGConfig()
-		{
-			if (File.Exists("Robust.ini"))
-			{
-				try
-				{
-					File.Copy("Robust.HG.ini.example", "Robust.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyStandaloneCommonConfig()
-		{
-			if (File.Exists("config-include/StandaloneCommon.ini"))
-			{
-				try
-				{
-					File.Copy("config-include/StandaloneCommon.ini.example", "config-include/StandaloneCommon.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyosslEnableConfig()
-		{
-			if (File.Exists("config-include/osslEnable.ini"))
-			{
-				try
-				{
-					File.Copy("config-include/osslEnable.ini.example", "config-include/osslEnable.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyGridCommonConfig()
-		{
-			if (File.Exists("config-include/GridCommon.ini"))
-			{
-				try
-				{
-					File.Copy("config-include/GridCommon.ini.example", "config-include/GridCommon.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		private static void CheckMyRegionsConfig()
-		{
-			if (File.Exists("Regions/Regions.ini"))
-			{
-				try
-				{
-					File.Copy("Regions/Regions.ini.example", "Regions/Regions.ini");
-				}
-				catch
-				{
-					// ignore and proceed
-				}
-			}
-		}
-
-		// #############################################################################
-
 		///ConfigureFlotsamCache
 		private static void ConfigureFlotsamCache()
 		{
-			// FlotsamCache.ini.example
-			CheckMyFlotsamCacheConfig();
 			try
 			{
 				using (TextReader tr = new StreamReader("config-include/FlotsamCache.ini.example"))
@@ -338,71 +204,78 @@ namespace OpenSim.Configuration
 		///ConfigureMoneyServer OK
 		private static void ConfigureMoneyServer()
 		{
-			CheckMyMoneyServerConfig();
-			try
+			// Dateiprüfung
+			string path = "MoneyServer.ini.example";
+			bool result = File.Exists(path);
+			if (result == true)
 			{
-				using (TextReader tr = new StreamReader("MoneyServer.ini.example"))
+				try
 				{
-					using (TextWriter tw = new StreamWriter("MoneyServer.ini"))
+					using (TextReader tr = new StreamReader("MoneyServer.ini.example"))
 					{
-						string line;
-						while ((line = tr.ReadLine()) != null)
+						using (TextWriter tw = new StreamWriter("MoneyServer.ini"))
 						{
-							//hostname = localhost
-							if (line.Contains("hostname"))
-							if (line.Contains("localhost"))
-								line = line.Replace("localhost", dbHost);
+							string line;
+							while ((line = tr.ReadLine()) != null)
+							{
+								//hostname = localhost
+								if (line.Contains("hostname"))
+								if (line.Contains("localhost"))
+									line = line.Replace("localhost", dbHost);
 
-							//database = Database_name
-							if (line.Contains("database"))
-							if (line.Contains("Database_name"))
-								line = line.Replace("Database_name", dbSchema);
+								//database = Database_name
+								if (line.Contains("database"))
+								if (line.Contains("Database_name"))
+									line = line.Replace("Database_name", dbSchema);
 
-							//username = Database_user
-							if (line.Contains("username"))
-							if (line.Contains("Database_user"))
-								line = line.Replace("Database_user", dbUser);
+								//username = Database_user
+								if (line.Contains("username"))
+								if (line.Contains("Database_user"))
+									line = line.Replace("Database_user", dbUser);
 
-							//password = Database_password
-							if (line.Contains("password"))
-							if (line.Contains("Database_password"))
-								line = line.Replace("Database_password", dbPasswd);
+								//password = Database_password
+								if (line.Contains("password"))
+								if (line.Contains("Database_password"))
+									line = line.Replace("Database_password", dbPasswd);
 
-							//; EnableScriptSendMoney = true
-							if (line.Contains("EnableScriptSendMoney"))
-							if (line.Contains("EnableScriptSendMoney"))
-								line = line.Replace(";EnableScriptSendMoney", "EnableScriptSendMoney");
+								//; EnableScriptSendMoney = true
+								if (line.Contains("EnableScriptSendMoney"))
+								if (line.Contains("EnableScriptSendMoney"))
+									line = line.Replace(";EnableScriptSendMoney", "EnableScriptSendMoney");
 
-							//; MoneyScriptAccessKey = "123456789"; ; Specify same secret key in include / config.php or WI(XoopenSim/ Modlos)
-							if (line.Contains("MoneyScriptAccessKey"))
-							if (line.Contains("MoneyScriptAccessKey"))
-								line = line.Replace(";MoneyScriptAccessKey", "MoneyScriptAccessKey");
+								//; MoneyScriptAccessKey = "123456789"; ; Specify same secret key in include / config.php or WI(XoopenSim/ Modlos)
+								if (line.Contains("MoneyScriptAccessKey"))
+								if (line.Contains("MoneyScriptAccessKey"))
+									line = line.Replace(";MoneyScriptAccessKey", "MoneyScriptAccessKey");
 
-							//; MoneyScriptIPaddress = "202.26.159.139"; ; Not use 127.0.0.1.This is used to generate Script key
-							if (line.Contains("MoneyScriptIPaddress"))
-							if (line.Contains("MoneyScriptIPaddress"))
-								line = line.Replace(";MoneyScriptIPaddress", "MoneyScriptIPaddress");
-								line = line.Replace("202.26.159.139", ipAddress);
+								//; MoneyScriptIPaddress = "202.26.159.139"; ; Not use 127.0.0.1.This is used to generate Script key
+								if (line.Contains("MoneyScriptIPaddress"))
+								if (line.Contains("MoneyScriptIPaddress"))
+									line = line.Replace(";MoneyScriptIPaddress", "MoneyScriptIPaddress");
+									line = line.Replace("202.26.159.139", ipAddress);
 
-							tw.WriteLine(line);
+								tw.WriteLine(line);
+							}
 						}
 					}
 				}
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("Error configuring MyWorld " + e.Message);
-				return;
-			}
+				catch (Exception e)
+				{
+					Console.WriteLine("Error configuring MoneyServer.ini " + e.Message);
+					return;
+				}
 
-			Console.WriteLine("MoneyServer has been successfully configured");
+				Console.WriteLine("MoneyServer.ini has been successfully configured");
+			}
+			else
+			{
+				Console.WriteLine("MoneyServer.ini.example Not Found");
+			}// Dateiprüfung Ende
 		}
 		
 		///ConfigureOpenSim()
 		private static void ConfigureOpenSim()
 		{
-			CheckMyOpenSimConfig();
-
 			try
 			{
 				using (TextReader tr = new StreamReader("OpenSim.ini.example"))
@@ -496,10 +369,6 @@ namespace OpenSim.Configuration
 		///ConfigureRobust()
 		private static void ConfigureRobust()
 		{
-			CheckMyRobustConfig();
-
-			//string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
-
 			try
 			{
 				using (TextReader tr = new StreamReader("Robust.ini.example"))
@@ -550,6 +419,12 @@ namespace OpenSim.Configuration
 							if (line.Contains("ConnectionString"))
 								if (line.Contains("ConnectionString"))
 									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
+
+							//	[GridService]
+							// ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
+							if (line.Contains("Region_Welcome_Area"))
+								if (line.Contains("Region_Welcome_Area"))
+									line = line.Replace("; Region_Welcome_Area", "Region_" + regionName);
 
 							//	[GridInfoService]
 							//	gridname = "the lost continent of hippo"
@@ -610,10 +485,6 @@ namespace OpenSim.Configuration
 		///ConfigureRobustHG()
 		private static void ConfigureRobustHG()
 		{
-			CheckMyRobustHGConfig();
-
-			//string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
-
 			try
 			{
 				using (TextReader tr = new StreamReader("Robust.HG.ini.example"))
@@ -675,6 +546,12 @@ namespace OpenSim.Configuration
 							if (line.Contains("ConnectionString"))
 								if (line.Contains("ConnectionString"))
 									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
+
+							//	[GridService]
+							// ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
+							if (line.Contains("Region_Welcome_Area"))
+								if (line.Contains("Region_Welcome_Area"))
+									line = line.Replace("; Region_Welcome_Area", "Region_" + regionName);
 
 							//	[GridInfoService]
 							//	gridname = "the lost continent of hippo"
@@ -743,11 +620,6 @@ namespace OpenSim.Configuration
 		///ConfigureStandaloneCommon()
 		private static void ConfigureStandaloneCommon()
 		{
-			
-			CheckMyStandaloneCommonConfig();
-
-			//string connString = String.Format("ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
-
 			try
 			{
 				using (TextReader tr = new StreamReader("config-include/StandaloneCommon.ini.example"))
@@ -796,6 +668,11 @@ namespace OpenSim.Configuration
 								if (line.Contains("GatekeeperURI"))
 									line = line.Replace("; GatekeeperURI", "GatekeeperURI");
 
+							//	[GridService]
+							// ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
+							if (line.Contains("Region_Welcome_Area"))
+								if (line.Contains("Region_Welcome_Area"))
+									line = line.Replace("; Region_Welcome_Area", "Region_" + regionName);
 
 							// 	       [GridInfoService]
 							//	gridname = "the lost continent of hippo"
@@ -859,7 +736,7 @@ namespace OpenSim.Configuration
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine("Error configuring MyWorld " + e.Message);
+				Console.WriteLine("Error configuring StandaloneCommon " + e.Message);
 				return;
 			}
 			Console.WriteLine("StandaloneCommon has been successfully configured");
@@ -868,11 +745,6 @@ namespace OpenSim.Configuration
 		///ConfigureGridCommon()
 		private static void ConfigureGridCommon()
 		{
-
-			CheckMyGridCommonConfig();
-
-			//string connString = String.Format("    ConnectionString = \"Data Source={0};Database={1};User ID={2};Password={3};Old Guids=true;Allow Zero Datetime=true;\"", dbHost, dbSchema, dbUser, dbPasswd);
-
 			try
 			{
 				using (TextReader tr = new StreamReader("config-include/GridCommon.ini.example"))
@@ -890,16 +762,13 @@ namespace OpenSim.Configuration
 									line = line.Replace("Include-Storage", "; Include-Storage");
 									line = line.Replace(";StorageProvider", "StorageProvider");
 									line = line.Replace(";ConnectionString", "ConnectionString");
-
-							//	[DatabaseService]
-							//	StorageProvider = "OpenSim.Data.MySQL.dll"
+							*/
 							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
 							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
 							// dbHost dbSchema dbUser dbPasswd
 							if (line.Contains("ConnectionString"))
 								if (line.Contains("ConnectionString"))
 									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
-							*/
 
 							if (line.Contains("GatekeeperURI"))
 								if (line.Contains("GatekeeperURI"))
@@ -922,7 +791,7 @@ namespace OpenSim.Configuration
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine("Error configuring MyWorld " + e.Message);
+				Console.WriteLine("Error configuring GridCommon " + e.Message);
 				return;
 			}
 
@@ -932,8 +801,6 @@ namespace OpenSim.Configuration
 		///ConfigureosslEnable()
 		private static void ConfigureosslEnable()
 		{
-			CheckMyosslEnableConfig();
-
 			try
 			{
 				using (TextReader tr = new StreamReader("config-include/osslEnable.ini.example"))
@@ -964,47 +831,56 @@ namespace OpenSim.Configuration
 		///ConfigureRegions()
 		private static void ConfigureRegions()
 		{
-			CheckMyRegionsConfig();
+			// Dateiprüfung
+			string path = "Regions.ini";
+			bool result = File.Exists(path);
+			if (result == true)
+			{
+				Console.WriteLine("Regions.ini already exist");
+			}
+			else
+			{
+				Guid UUID = Guid.NewGuid();
 
-			Guid UUID = Guid.NewGuid();
+				StreamWriter writer = File.CreateText("Regions/Regions.ini");
+			
+				// Ein paar Einträge hineinschreiben
+				writer.WriteLine("[" + regionName + "]");
+				writer.WriteLine("RegionUUID = " + UUID);
+				writer.WriteLine("Location = " + location);
+				writer.WriteLine("InternalAddress = 0.0.0.0");
+				writer.WriteLine("InternalPort = 9100");
+				writer.WriteLine("AllowAlternatePorts = False");
+				writer.WriteLine("ResolveAddress = False");
+				writer.WriteLine("ExternalHostName = " + ipAddress);
+				writer.WriteLine("SizeX = " + regionSize);
+				writer.WriteLine("SizeY = " + regionSize);
+				writer.WriteLine("SizeZ = " + regionSize);
+				writer.WriteLine("MaptileStaticUUID = " + UUID);
+				writer.WriteLine("NonPhysicalPrimMax = " + regionSize);
+				writer.WriteLine("PhysicalPrimMax = 64");
+				writer.WriteLine("; ClampPrimSize = false");
+				writer.WriteLine("MaxPrims = 100000");
+				writer.WriteLine("MaxAgents = 50");
+				writer.WriteLine("; MaxPrimsPerUser = -1");
 
-			StreamWriter writer = File.CreateText("Regions/Regions.ini");
+				writer.Close(); // Den Dateizugriff beenden
 
-			// Ein paar Einträge hineinschreiben
-			writer.WriteLine("[" + worldName + "]");
-			writer.WriteLine("RegionUUID = " + UUID);
-			writer.WriteLine("Location = 2500,2500");
-			writer.WriteLine("InternalAddress = 0.0.0.0");
-			writer.WriteLine("InternalPort = 9100");
-			writer.WriteLine("AllowAlternatePorts = False");
-			writer.WriteLine("ResolveAddress = False");
-			writer.WriteLine("ExternalHostName = " + ipAddress);
-			writer.WriteLine("SizeX = 512");
-			writer.WriteLine("SizeY = 512");
-			writer.WriteLine("SizeZ = 512");
-			writer.WriteLine("MaptileStaticUUID = " + UUID);
-			writer.WriteLine("NonPhysicalPrimMax = 512");
-			writer.WriteLine("PhysicalPrimMax = 64");
-			writer.WriteLine("; ClampPrimSize = false");
-			writer.WriteLine("MaxPrims = 100000");
-			writer.WriteLine("MaxAgents = 50");
-			writer.WriteLine("; MaxPrimsPerUser = -1");
+				Console.WriteLine("Regions.ini has been successfully configured");
+			}// Dateiprüfung Ende
+		}//ConfigureRegions End
 
-			writer.Close(); // Den Dateizugriff beenden
+		// #############################################################################
 
-			Console.WriteLine("Regions.ini has been successfully configured");
-		}
-
-			// #############################################################################
-
-			private static void DisplayInfo()
+		/// Display
+		private static void DisplayInfo()
         {
             Console.WriteLine("\n***************************************************");
             Console.WriteLine("Your Virtual World is " + worldName);
             Console.WriteLine("Your loginuri is http://" + ipAddress + ":8002");
-			//Console.WriteLine("You user account is:");
-			//Console.WriteLine("  username: " + userFirst + " " + userLast);
-			//Console.WriteLine("  passwd:   " + userPasswd +"\n");
+			Console.WriteLine("You start region is:");
+			Console.WriteLine("  Region name: " + regionName);
+			Console.WriteLine("  Location:   " + location);
 			Console.WriteLine("***************************************************\n");
             Console.Write("<Press enter to exit>");
             Console.ReadLine();
