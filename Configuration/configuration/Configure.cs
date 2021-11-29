@@ -11,7 +11,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// version = "Version 0.0.4";
+// version = "Version 0.0.5";
 
 using System;
 using System.IO;
@@ -22,7 +22,7 @@ namespace OpenSim.Configuration
     public class Configure
     {
 		/// voreinstellungen
-		private static string worldName = "My Virtual World";
+		private static string worldName = "MyVirtualWorld";
         private static string dbHost = "localhost";
         private static string dbSchema = "opensim";
         private static string dbUser = "opensim";
@@ -32,11 +32,11 @@ namespace OpenSim.Configuration
 		private static string regionSize = "256";
 		private static string regionName = "Welcome";
 		private static string location = "2500,2500";
-		
-		/// IP ermitteln
+
+		/// Determine IP 
 		public static string GetPublicIP()
 		{
-			// IP ermitteln
+			// Determine IP 
 			string url = "http://checkip.dyndns.org";
 			System.Net.WebRequest req = System.Net.WebRequest.Create(url);
 			System.Net.WebResponse resp = req.GetResponse();
@@ -49,10 +49,73 @@ namespace OpenSim.Configuration
 			return a4;
 		}
 
+		/// Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
+		private static void SaveIni()
+		{
+			string Timestamp = DateTime.Now.ToString("dd-MM-yyyy-hh-mm-ss");
+
+			string path1 = "config-include/FlotsamCache.ini";
+			bool result1 = File.Exists(path1);
+			if (result1 == true)
+			{
+				System.IO.File.Move("config-include/FlotsamCache.ini", "config-include/FlotsamCache.ini.old" + "." + Timestamp);
+			}	
+			string path2 = "MoneyServer.ini";
+			bool result2 = File.Exists(path2);
+			if (result2 == true)
+			{
+				System.IO.File.Move("MoneyServer.ini", "MoneyServer.ini.old" + "." + Timestamp);
+			}
+			string path3 = "OpenSim.ini";
+			bool result3 = File.Exists(path3);
+			if (result3 == true)
+			{
+				System.IO.File.Move("OpenSim.ini", "OpenSim.ini.old" + "." + Timestamp);
+			}
+			string path4 = "Robust.ini";
+			bool result4 = File.Exists(path4);
+			if (result4 == true)
+			{
+				System.IO.File.Move("Robust.ini", "Robust.ini.old" + "." + Timestamp);
+			}
+			string path5 = "Robust.HG.ini";
+			bool result5 = File.Exists(path5);
+			if (result5 == true)
+			{
+				System.IO.File.Move("Robust.HG.ini", "Robust.HG.ini.old" + "." + Timestamp);
+			}
+			string path6 = "config-include/StandaloneCommon.ini";
+			bool result6 = File.Exists(path6);
+			if (result6 == true)
+			{
+				System.IO.File.Move("config-include/StandaloneCommon.ini", "config-include/StandaloneCommon.ini.old" + "." + Timestamp);
+			}
+			string path7 = "config-include/GridCommon.ini";
+			bool result7 = File.Exists(path7);
+			if (result7 == true)
+			{
+				System.IO.File.Move("config-include/GridCommon.ini", "config-include/GridCommon.ini.old" + "." + Timestamp);
+			}
+			string path8 = "config-include/osslEnable.ini";
+			bool result8 = File.Exists(path8);
+			if (result8 == true)
+			{
+				System.IO.File.Move("config-include/osslEnable.ini", "config-include/osslEnable.ini.old" + "." + Timestamp);
+			}
+			string path9 = "Regions/Regions.ini";
+			bool result9 = File.Exists(path9);
+			if (result9 == true)
+			{
+				System.IO.File.Move("Regions/Regions.ini", "Regions/Regions.ini.old" + "." + Timestamp);
+			}
+		}
+
 		/// start
 		public static void Main(string[] args)
         {
 			GetUserInput();
+
+			SaveIni(); // Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
 
 			ConfigureFlotsamCache(); // OK
 			ConfigureMoneyServer(); // OK
@@ -61,8 +124,8 @@ namespace OpenSim.Configuration
 			ConfigureRobustHG(); // OK
 			ConfigureStandaloneCommon(); // OK
 			ConfigureGridCommon(); // OK
-			ConfigureosslEnable(); // OK aber leer
-			ConfigureRegions(); // OK aber leer
+			ConfigureosslEnable(); // OK empty 
+			ConfigureRegions(); // OK empty 
 
 			DisplayInfo();
         }
