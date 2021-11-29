@@ -20,6 +20,8 @@ mono OK - DotNET OK
 
 Automatisch die Externe IP in allen Konfigurationen oder Manuell. - Automatically the external IP in all configurations or manually.
 
+backup Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
+
 ## Was macht es:
 Es erstellt aus euren *.ini.example Dateien hoffentlich funktionierende Konfigurationen für:
 
