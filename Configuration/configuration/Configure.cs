@@ -22,7 +22,7 @@ namespace OpenSim.Configuration
 {
     public class Configure
     {
-		private static string worldName = "My Virtual World";
+		private static string worldName = "MyVirtualWorld";
         private static string dbHost = "localhost";
         private static string dbSchema = "opensim";
         private static string dbUser = "opensim";
@@ -88,10 +88,73 @@ namespace OpenSim.Configuration
 
 			return firstUnused.Value;
 		}
+		
+		/// Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
+		private static void SaveIni()
+		{
+			string Timestamp = DateTime.Now.ToString("dd-MM-yyyy-hh-mm-ss");
+
+			string path1 = "config-include/FlotsamCache.ini";
+			bool result1 = File.Exists(path1);
+			if (result1 == true)
+			{
+				System.IO.File.Move("config-include/FlotsamCache.ini", "config-include/FlotsamCache.ini.old" + "." + Timestamp);
+			}	
+			string path2 = "MoneyServer.ini";
+			bool result2 = File.Exists(path2);
+			if (result2 == true)
+			{
+				System.IO.File.Move("MoneyServer.ini", "MoneyServer.ini.old" + "." + Timestamp);
+			}
+			string path3 = "OpenSim.ini";
+			bool result3 = File.Exists(path3);
+			if (result3 == true)
+			{
+				System.IO.File.Move("OpenSim.ini", "OpenSim.ini.old" + "." + Timestamp);
+			}
+			string path4 = "Robust.ini";
+			bool result4 = File.Exists(path4);
+			if (result4 == true)
+			{
+				System.IO.File.Move("Robust.ini", "Robust.ini.old" + "." + Timestamp);
+			}
+			string path5 = "Robust.HG.ini";
+			bool result5 = File.Exists(path5);
+			if (result5 == true)
+			{
+				System.IO.File.Move("Robust.HG.ini", "Robust.HG.ini.old" + "." + Timestamp);
+			}
+			string path6 = "config-include/StandaloneCommon.ini";
+			bool result6 = File.Exists(path6);
+			if (result6 == true)
+			{
+				System.IO.File.Move("config-include/StandaloneCommon.ini", "config-include/StandaloneCommon.ini.old" + "." + Timestamp);
+			}
+			string path7 = "config-include/GridCommon.ini";
+			bool result7 = File.Exists(path7);
+			if (result7 == true)
+			{
+				System.IO.File.Move("config-include/GridCommon.ini", "config-include/GridCommon.ini.old" + "." + Timestamp);
+			}
+			string path8 = "config-include/osslEnable.ini";
+			bool result8 = File.Exists(path8);
+			if (result8 == true)
+			{
+				System.IO.File.Move("config-include/osslEnable.ini", "config-include/osslEnable.ini.old" + "." + Timestamp);
+			}
+			string path9 = "Regions/Regions.ini";
+			bool result9 = File.Exists(path9);
+			if (result9 == true)
+			{
+				System.IO.File.Move("Regions/Regions.ini", "Regions/Regions.ini.old" + "." + Timestamp);
+			}
+		}
 
 		public static void Main(string[] args)
         {
 			GetUserInput();
+			
+			SaveIni(); // Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
 
 			ConfigureFlotsamCache();
 			ConfigureMoneyServer();
@@ -226,38 +289,31 @@ namespace OpenSim.Configuration
 							while ((line = tr.ReadLine()) != null)
 							{
 								//hostname = localhost
-								if (line.Contains("hostname"))
 								if (line.Contains("localhost"))
 									line = line.Replace("localhost", dbHost);
 
 								//database = Database_name
-								if (line.Contains("database"))
 								if (line.Contains("Database_name"))
 									line = line.Replace("Database_name", dbSchema);
 
 								//username = Database_user
-								if (line.Contains("username"))
 								if (line.Contains("Database_user"))
 									line = line.Replace("Database_user", dbUser);
 
 								//password = Database_password
-								if (line.Contains("password"))
 								if (line.Contains("Database_password"))
 									line = line.Replace("Database_password", dbPasswd);
 
 								//; EnableScriptSendMoney = true
-								if (line.Contains("EnableScriptSendMoney"))
-								if (line.Contains("EnableScriptSendMoney"))
+								if (line.Contains(";EnableScriptSendMoney"))
 									line = line.Replace(";EnableScriptSendMoney", "EnableScriptSendMoney");
 
 								//; MoneyScriptAccessKey = "123456789"; ; Specify same secret key in include / config.php or WI(XoopenSim/ Modlos)
-								if (line.Contains("MoneyScriptAccessKey"))
-								if (line.Contains("MoneyScriptAccessKey"))
+								if (line.Contains(";MoneyScriptAccessKey"))
 									line = line.Replace(";MoneyScriptAccessKey", "MoneyScriptAccessKey");
 
 								//; MoneyScriptIPaddress = "202.26.159.139"; ; Not use 127.0.0.1.This is used to generate Script key
-								if (line.Contains("MoneyScriptIPaddress"))
-								if (line.Contains("MoneyScriptIPaddress"))
+								if (line.Contains(";MoneyScriptIPaddress"))
 									line = line.Replace(";MoneyScriptIPaddress", "MoneyScriptIPaddress");
 									line = line.Replace("202.26.159.139", ipAddress);
 
@@ -279,9 +335,9 @@ namespace OpenSim.Configuration
 				Console.WriteLine("MoneyServer.ini.example Not Found");
 			}
 		}
-
+		///ConfigureOpenSim()
 		private static void ConfigureOpenSim()
-		{			
+		{
 			try
 			{
 				using (TextReader tr = new StreamReader("OpenSim.ini.example"))
@@ -304,34 +360,78 @@ namespace OpenSim.Configuration
 							if (line.Contains("user_agent"))
 								line = line.Replace("; user_agent", "user_agent");
 
+							//	   [ClientStack.LindenUDP]
 							//	   ; DisableFacelights = "false"
+							// client_throttle_max_bps = 400000
+							// scene_throttle_max_bps = 75000000
 							if (line.Contains("DisableFacelights"))
-                                line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"");
+                                line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"\n    client_throttle_max_bps = 400000\n    scene_throttle_max_bps = 75000000");
 
+							// [SimulatorFeatures]
+							// ; SearchServerURI = "http://127.0.0.1:9000/"
+							// SearchServerURI = "${Const|BaseURL}:${Const|PublicPort}"
+							// ; DestinationGuideURI = "http://127.0.0.1:9000/guide"
+							// DestinationGuideURI = "${Const|BaseURL}:${Const|PublicPort}"
+							if (line.Contains("enable_windlight"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("enable_windlight"))
+								line = line.Replace("; DestinationGuideURI =", "DestinationGuideURI = ${Const|BaseURL}:${Const|PublicPort}");
+
+							// ; ObjectsCullingByDistance = false
+							if (line.Contains("ObjectsCullingByDistance"))
+								line = line.Replace("; ObjectsCullingByDistance = false", "ObjectsCullingByDistance = true");
+
+							// [LandManagement]
+							// ShowParcelBansLines = true
+							if (line.Contains("ShowParcelBansLines"))
+								line = line.Replace(";ShowParcelBansLines = false", "ShowParcelBansLines = true");
+
+							//	   [LightShare]
 							//	   ; enable_windlight = false
 							if (line.Contains("enable_windlight"))
 								line = line.Replace("; enable_windlight = false", "enable_windlight = true");
 
+							//	   [Materials]
 							//	   ; MaxMaterialsPerTransaction = 50
 							if (line.Contains("MaxMaterialsPerTransaction"))
 								line = line.Replace("; MaxMaterialsPerTransaction = 50", "MaxMaterialsPerTransaction = 250");
 
+							//	   [DataSnapshot]
 							//	   ; gridname = "OSGrid"
 							if (line.Contains("gridname"))
 								line = line.Replace("; gridname = \"OSGrid\"", "gridname = \""+ worldName+"\"");
 
+							//	   [Terrain]
 							//	   ; InitialTerrain = "pinhead-island"
 							if (line.Contains("pinhead-island"))
 								line = line.Replace("; InitialTerrain", "InitialTerrain");
 								line = line.Replace("pinhead-island", "flat");
 
+							// [UserProfiles]
+							// ;; ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}
+							// ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}
+							// ; AllowUserProfileWebURLs = true
+							// AllowUserProfileWebURLs = true
+							if (line.Contains("ProfileServiceURL"))
+								line = line.Replace(";; ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}", "ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("AllowUserProfileWebURLs"))
+								line = line.Replace("; AllowUserProfileWebURLs = true", "AllowUserProfileWebURLs = true");
+
+							// [XBakes]
 							// ;; URL = ${Const|PrivURL}:${Const|PrivatePort}
 							if (line.Contains("XBakes"))
-								line = line.Replace(";; URL = ${Const|PrivURL}:${Const|PrivatePort}", "URL = ${Const|PrivURL}:${Const|PrivatePort}");							
+								line = line.Replace(";; URL = ${Const|PrivURL}:${Const|PrivatePort}", "URL = ${Const|PrivURL}:${Const|PrivatePort}");
+
+							//	   [Architecture]
+							if (line.Contains("Include-Architecture"))
+								line = line.Replace("; Include-Architecture = \"config-include/StandaloneHypergrid.ini\"", " ");
+								line = line.Replace("; Include-Architecture = \"config-include/Grid.ini\"", " ");
+								line = line.Replace("; Include-Architecture = \"config-include/GridHypergrid.ini\"", " ");
+
 
 							// modus = "Standalone, StandaloneHG, Grid, [GridHG]
 							if (line.Contains("Include-Architecture"))
-								if ( modus == "Standalone" )
+								if (modus == "Standalone")
 								{
 									line = line.Replace("config-include/Standalone.ini", "config-include/Standalone.ini");
 								}
@@ -347,6 +447,7 @@ namespace OpenSim.Configuration
 								{
 									line = line.Replace("config-include/Standalone.ini", "config-include/GridHypergrid.ini");
 								}
+													
 							tw.WriteLine(line);
 						}
 					}
