@@ -15,14 +15,14 @@
 
 using System;
 using System.IO;
-
+using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace OpenSim.Configuration
 {
     public class Configure
     {
-		/// voreinstellungen
-		private static string worldName = "MyVirtualWorld";
+		private static string worldName = "My Virtual World";
         private static string dbHost = "localhost";
         private static string dbSchema = "opensim";
         private static string dbUser = "opensim";
@@ -32,12 +32,23 @@ namespace OpenSim.Configuration
 		private static string regionSize = "256";
 		private static string regionName = "Welcome";
 		private static string location = "2500,2500";
+		private static string portAddress = "9010";
+		private static readonly string osPort = "9010";
+		private static string regionPort = "9100";
 
-		/// Determine IP 
+		/// Determine IP
 		public static string GetPublicIP()
 		{
-			// Determine IP 
+			//youreip.php
+			//<? php
+			//$ip = $_SERVER["REMOTE_ADDR"];
+			//echo "Current IP Address: $ip";  
+			//?>
+
+			// Insert configuration setting here
 			string url = "http://checkip.dyndns.org";
+			//string url = "http://opensimulator.org/youreip.php";
+
 			System.Net.WebRequest req = System.Net.WebRequest.Create(url);
 			System.Net.WebResponse resp = req.GetResponse();
 			System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
@@ -49,92 +60,58 @@ namespace OpenSim.Configuration
 			return a4;
 		}
 
-		/// Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
-		private static void SaveIni()
+		/// find the next available TCP port within a given range
+		public static int GetNextFreePort(int min, int max)
 		{
-			string Timestamp = DateTime.Now.ToString("dd-MM-yyyy-hh-mm-ss");
+			if (max < min)
+				throw new ArgumentException("Max cannot be less than min.");
 
-			string path1 = "config-include/FlotsamCache.ini";
-			bool result1 = File.Exists(path1);
-			if (result1 == true)
-			{
-				System.IO.File.Move("config-include/FlotsamCache.ini", "config-include/FlotsamCache.ini.old" + "." + Timestamp);
-			}	
-			string path2 = "MoneyServer.ini";
-			bool result2 = File.Exists(path2);
-			if (result2 == true)
-			{
-				System.IO.File.Move("MoneyServer.ini", "MoneyServer.ini.old" + "." + Timestamp);
-			}
-			string path3 = "OpenSim.ini";
-			bool result3 = File.Exists(path3);
-			if (result3 == true)
-			{
-				System.IO.File.Move("OpenSim.ini", "OpenSim.ini.old" + "." + Timestamp);
-			}
-			string path4 = "Robust.ini";
-			bool result4 = File.Exists(path4);
-			if (result4 == true)
-			{
-				System.IO.File.Move("Robust.ini", "Robust.ini.old" + "." + Timestamp);
-			}
-			string path5 = "Robust.HG.ini";
-			bool result5 = File.Exists(path5);
-			if (result5 == true)
-			{
-				System.IO.File.Move("Robust.HG.ini", "Robust.HG.ini.old" + "." + Timestamp);
-			}
-			string path6 = "config-include/StandaloneCommon.ini";
-			bool result6 = File.Exists(path6);
-			if (result6 == true)
-			{
-				System.IO.File.Move("config-include/StandaloneCommon.ini", "config-include/StandaloneCommon.ini.old" + "." + Timestamp);
-			}
-			string path7 = "config-include/GridCommon.ini";
-			bool result7 = File.Exists(path7);
-			if (result7 == true)
-			{
-				System.IO.File.Move("config-include/GridCommon.ini", "config-include/GridCommon.ini.old" + "." + Timestamp);
-			}
-			string path8 = "config-include/osslEnable.ini";
-			bool result8 = File.Exists(path8);
-			if (result8 == true)
-			{
-				System.IO.File.Move("config-include/osslEnable.ini", "config-include/osslEnable.ini.old" + "." + Timestamp);
-			}
-			string path9 = "Regions/Regions.ini";
-			bool result9 = File.Exists(path9);
-			if (result9 == true)
-			{
-				System.IO.File.Move("Regions/Regions.ini", "Regions/Regions.ini.old" + "." + Timestamp);
-			}
+			var ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+
+			var usedPorts =
+				ipProperties.GetActiveTcpConnections()
+					.Where(connection => connection.State != TcpState.Closed)
+					.Select(connection => connection.LocalEndPoint)
+					.Concat(ipProperties.GetActiveTcpListeners())
+					.Concat(ipProperties.GetActiveUdpListeners())
+					.Select(endpoint => endpoint.Port)
+					.ToArray();
+
+			var firstUnused =
+				Enumerable.Range(min, max - min)
+					.Where(port => !usedPorts.Contains(port))
+					.Select(port => new int?(port))
+					.FirstOrDefault();
+
+			if (!firstUnused.HasValue)
+				throw new Exception($"All local TCP ports between {min} and {max} are currently in use.");
+
+			return firstUnused.Value;
 		}
 
-		/// start
 		public static void Main(string[] args)
         {
 			GetUserInput();
 
-			SaveIni(); // Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
-
-			ConfigureFlotsamCache(); // OK
-			ConfigureMoneyServer(); // OK
-			ConfigureOpenSim(); // OK
-			ConfigureRobust(); // OK
-			ConfigureRobustHG(); // OK
-			ConfigureStandaloneCommon(); // OK
-			ConfigureGridCommon(); // OK
-			ConfigureosslEnable(); // OK empty 
-			ConfigureRegions(); // OK empty 
+			ConfigureFlotsamCache();
+			ConfigureMoneyServer();
+			ConfigureOpenSim();
+			ConfigureRobust();
+			ConfigureRobustHG();
+			ConfigureStandaloneCommon();
+			ConfigureGridCommon();
+			ConfigureosslEnable();
+			ConfigureRegions();
 
 			DisplayInfo();
         }
-		
-		/// User input
+
         private static void GetUserInput()
         {
 			string tmp;
 			string myIP = GetPublicIP();
+			int Port = GetNextFreePort(9010, 9099);
+			string osPort = Convert.ToString(Port);
 
 			Console.Write("Standalone, StandaloneHG, Grid, [GridHG]: ");
 			modus = Console.ReadLine();
@@ -171,12 +148,17 @@ namespace OpenSim.Configuration
             if (ipAddress == string.Empty)
                 ipAddress = myIP;
 
+			Console.Write("Your OpenSim Port: [" + osPort + "] ");
+			portAddress = Console.ReadLine();
+			if (portAddress == string.Empty)
+				portAddress = osPort;
+
 			Console.Write("region name [Welcome]: ");
 			tmp = Console.ReadLine();
 			if (tmp != string.Empty)
 				regionName = tmp;
 
-			Console.Write("Location [2500,2500]: ");
+			Console.Write("Location = [2500,2500]: ");
 			tmp = Console.ReadLine();
 			if (tmp != string.Empty)
 				location = tmp;
@@ -186,10 +168,13 @@ namespace OpenSim.Configuration
 			if (tmp != string.Empty)
 				regionSize = tmp;
 
-			Console.WriteLine("\n ");
-        }
+			Console.Write("Region Port: [" + regionPort + "] ");
+			regionPort = Console.ReadLine();
+			if (regionPort == string.Empty)
+				regionPort = osPort;
 
-		// #############################################################################
+			Console.WriteLine("\n***************************************************");
+        }
 
 		///ConfigureFlotsamCache
 		private static void ConfigureFlotsamCache()
@@ -203,6 +188,12 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
+							//LogLevel = 0
+
+							if (line.Contains("LogLevel"))
+								if (line.Contains("LogLevel"))
+									line = line.Replace("LogLevel = 0", "LogLevel = 0");
+
 							tw.WriteLine(line);
 						}
 					}
@@ -220,7 +211,7 @@ namespace OpenSim.Configuration
 		///ConfigureMoneyServer OK
 		private static void ConfigureMoneyServer()
 		{
-			// Dateiprüfung
+			// Dateipruefung
 			string path = "MoneyServer.ini.example";
 			bool result = File.Exists(path);
 			if (result == true)
@@ -235,32 +226,38 @@ namespace OpenSim.Configuration
 							while ((line = tr.ReadLine()) != null)
 							{
 								//hostname = localhost
-
+								if (line.Contains("hostname"))
 								if (line.Contains("localhost"))
 									line = line.Replace("localhost", dbHost);
 
 								//database = Database_name
+								if (line.Contains("database"))
 								if (line.Contains("Database_name"))
 									line = line.Replace("Database_name", dbSchema);
 
 								//username = Database_user
+								if (line.Contains("username"))
 								if (line.Contains("Database_user"))
 									line = line.Replace("Database_user", dbUser);
 
 								//password = Database_password
+								if (line.Contains("password"))
 								if (line.Contains("Database_password"))
 									line = line.Replace("Database_password", dbPasswd);
 
 								//; EnableScriptSendMoney = true
-								if (line.Contains(";EnableScriptSendMoney"))
+								if (line.Contains("EnableScriptSendMoney"))
+								if (line.Contains("EnableScriptSendMoney"))
 									line = line.Replace(";EnableScriptSendMoney", "EnableScriptSendMoney");
 
 								//; MoneyScriptAccessKey = "123456789"; ; Specify same secret key in include / config.php or WI(XoopenSim/ Modlos)
-								if (line.Contains(";MoneyScriptAccessKey"))
+								if (line.Contains("MoneyScriptAccessKey"))
+								if (line.Contains("MoneyScriptAccessKey"))
 									line = line.Replace(";MoneyScriptAccessKey", "MoneyScriptAccessKey");
 
 								//; MoneyScriptIPaddress = "202.26.159.139"; ; Not use 127.0.0.1.This is used to generate Script key
-								if (line.Contains(";MoneyScriptIPaddress"))
+								if (line.Contains("MoneyScriptIPaddress"))
+								if (line.Contains("MoneyScriptIPaddress"))
 									line = line.Replace(";MoneyScriptIPaddress", "MoneyScriptIPaddress");
 									line = line.Replace("202.26.159.139", ipAddress);
 
@@ -280,12 +277,11 @@ namespace OpenSim.Configuration
 			else
 			{
 				Console.WriteLine("MoneyServer.ini.example Not Found");
-			}// Dateiprüfung Ende
+			}
 		}
-		
-		///ConfigureOpenSim()
+
 		private static void ConfigureOpenSim()
-		{
+		{			
 			try
 			{
 				using (TextReader tr = new StreamReader("OpenSim.ini.example"))
@@ -295,93 +291,47 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-							//	   [Const]
 							//	   BaseHostname = "127.0.0.1"
 							if (line.Contains("BaseHostname"))
 							if (line.Contains("127.0.0.1"))
 								line = line.Replace("127.0.0.1", ipAddress);
 
-							//	   [Network]
 							//	   ; http_listener_port = 9000
 							if (line.Contains("http_listener_port"))
-								line = line.Replace("; http_listener_port = 9000", "http_listener_port = 9010");
+								line = line.Replace("; http_listener_port = 9000", "http_listener_port = \"" + osPort + "\"");
 
 							//	   ; user_agent = "OpenSim LSL (Mozilla Compatible)"
 							if (line.Contains("user_agent"))
 								line = line.Replace("; user_agent", "user_agent");
 
-							//	   [ClientStack.LindenUDP]
 							//	   ; DisableFacelights = "false"
-							// client_throttle_max_bps = 400000
-							// scene_throttle_max_bps = 75000000
 							if (line.Contains("DisableFacelights"))
-                                line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"\n    client_throttle_max_bps = 400000\n    scene_throttle_max_bps = 75000000");
+                                line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"");
 
-							// [SimulatorFeatures]
-							// ; SearchServerURI = "http://127.0.0.1:9000/"
-							// SearchServerURI = "${Const|BaseURL}:${Const|PublicPort}"
-							// ; DestinationGuideURI = "http://127.0.0.1:9000/guide"
-							// DestinationGuideURI = "${Const|BaseURL}:${Const|PublicPort}"
-							if (line.Contains("enable_windlight"))
-								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
-							if (line.Contains("enable_windlight"))
-								line = line.Replace("; DestinationGuideURI =", "DestinationGuideURI = ${Const|BaseURL}:${Const|PublicPort}");
-
-							// ; ObjectsCullingByDistance = false
-							if (line.Contains("ObjectsCullingByDistance"))
-								line = line.Replace("; ObjectsCullingByDistance = false", "ObjectsCullingByDistance = true");
-
-							// [LandManagement]
-							// ShowParcelBansLines = true
-							if (line.Contains("ShowParcelBansLines"))
-								line = line.Replace(";ShowParcelBansLines = false", "ShowParcelBansLines = true");
-
-							//	   [LightShare]
 							//	   ; enable_windlight = false
 							if (line.Contains("enable_windlight"))
 								line = line.Replace("; enable_windlight = false", "enable_windlight = true");
 
-							//	   [Materials]
 							//	   ; MaxMaterialsPerTransaction = 50
 							if (line.Contains("MaxMaterialsPerTransaction"))
 								line = line.Replace("; MaxMaterialsPerTransaction = 50", "MaxMaterialsPerTransaction = 250");
 
-							//	   [DataSnapshot]
 							//	   ; gridname = "OSGrid"
 							if (line.Contains("gridname"))
 								line = line.Replace("; gridname = \"OSGrid\"", "gridname = \""+ worldName+"\"");
 
-							//	   [Terrain]
 							//	   ; InitialTerrain = "pinhead-island"
 							if (line.Contains("pinhead-island"))
 								line = line.Replace("; InitialTerrain", "InitialTerrain");
 								line = line.Replace("pinhead-island", "flat");
 
-							// [UserProfiles]
-							// ;; ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}
-							// ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}
-							// ; AllowUserProfileWebURLs = true
-							// AllowUserProfileWebURLs = true
-							if (line.Contains("ProfileServiceURL"))
-								line = line.Replace(";; ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}", "ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}");
-							if (line.Contains("AllowUserProfileWebURLs"))
-								line = line.Replace("; AllowUserProfileWebURLs = true", "AllowUserProfileWebURLs = true");
-
-							// [XBakes]
 							// ;; URL = ${Const|PrivURL}:${Const|PrivatePort}
 							if (line.Contains("XBakes"))
-								line = line.Replace(";; URL = ${Const|PrivURL}:${Const|PrivatePort}", "URL = ${Const|PrivURL}:${Const|PrivatePort}");
-
-							//	   [Architecture]
-							if (line.Contains("Include-Architecture"))
-								line = line.Replace("; Include-Architecture = \"config-include/StandaloneHypergrid.ini\"", " ");
-								line = line.Replace("; Include-Architecture = \"config-include/Grid.ini\"", " ");
-								line = line.Replace("; Include-Architecture = \"config-include/GridHypergrid.ini\"", " ");
-
+								line = line.Replace(";; URL = ${Const|PrivURL}:${Const|PrivatePort}", "URL = ${Const|PrivURL}:${Const|PrivatePort}");							
 
 							// modus = "Standalone, StandaloneHG, Grid, [GridHG]
 							if (line.Contains("Include-Architecture"))
-								if (modus == "Standalone")
+								if ( modus == "Standalone" )
 								{
 									line = line.Replace("config-include/Standalone.ini", "config-include/Standalone.ini");
 								}
@@ -397,7 +347,6 @@ namespace OpenSim.Configuration
 								{
 									line = line.Replace("config-include/Standalone.ini", "config-include/GridHypergrid.ini");
 								}
-													
 							tw.WriteLine(line);
 						}
 					}
@@ -413,8 +362,7 @@ namespace OpenSim.Configuration
 
 			Console.WriteLine("OpenSim has been successfully configured");
 		}
-		
-		///ConfigureRobust()
+
 		private static void ConfigureRobust()
 		{
 			try
@@ -426,14 +374,11 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-
-							//	[Const]
 							//	BaseURL = "http://127.0.0.1"
 							if (line.Contains("BaseURL"))
 								if (line.Contains("http://127.0.0.1"))
 									line = line.Replace("http://127.0.0.1", "http://" + ipAddress + "");
 
-							//	[ServiceList]
 							//	; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
 							if (line.Contains("OfflineIMServiceConnector"))
 								if (line.Contains("OfflineIMServiceConnector"))
@@ -459,22 +404,16 @@ namespace OpenSim.Configuration
 								if (line.Contains("GroupsServiceConnector"))
 									line = line.Replace("; GroupsServiceConnector", "GroupsServiceConnector");
 
-							//	[DatabaseService]
-							//	StorageProvider = "OpenSim.Data.MySQL.dll"
 							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
-							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
-							// dbHost dbSchema dbUser dbPasswd
 							if (line.Contains("ConnectionString"))
 								if (line.Contains("ConnectionString"))
 									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
 
-							//	[GridService]
 							// ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
 							if (line.Contains("Region_Welcome_Area"))
 								if (line.Contains("Region_Welcome_Area"))
 									line = line.Replace("; Region_Welcome_Area", "Region_" + regionName);
 
-							//	[GridInfoService]
 							//	gridname = "the lost continent of hippo"
 							if (line.Contains("gridname"))
 								if (line.Contains("gridname"))
@@ -530,7 +469,6 @@ namespace OpenSim.Configuration
 			Console.WriteLine("Robust has been successfully configured");
 		}
 
-		///ConfigureRobustHG()
 		private static void ConfigureRobustHG()
 		{
 			try
@@ -542,14 +480,11 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-
-							//	[Const]
 							//	BaseURL = "http://127.0.0.1"
 							if (line.Contains("BaseURL"))
 								if (line.Contains("http://127.0.0.1"))
 									line = line.Replace("http://127.0.0.1","http://"+ipAddress+"");
 
-							//	[ServiceList]
 							//	; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
 							if (line.Contains("OfflineIMServiceConnector"))
 								if (line.Contains("OfflineIMServiceConnector"))
@@ -575,7 +510,6 @@ namespace OpenSim.Configuration
 								if (line.Contains("HGGroupsServiceConnector"))
 									line = line.Replace("; HGGroupsServiceConnector", "HGGroupsServiceConnector");
 	
-							//	[Hypergrid]
 							//	; HomeURI = "${Const|BaseURL}:${Const|PublicPort}"
 							if (line.Contains("HomeURI"))
 								if (line.Contains("HomeURI"))
@@ -586,22 +520,16 @@ namespace OpenSim.Configuration
 								if (line.Contains("GatekeeperURI"))
 									line = line.Replace("; GatekeeperURI", "GatekeeperURI");
 
-							//	[DatabaseService]
-							//	StorageProvider = "OpenSim.Data.MySQL.dll"
 							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
-							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
-							// dbHost dbSchema dbUser dbPasswd
 							if (line.Contains("ConnectionString"))
 								if (line.Contains("ConnectionString"))
 									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
 
-							//	[GridService]
 							// ; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
 							if (line.Contains("Region_Welcome_Area"))
 								if (line.Contains("Region_Welcome_Area"))
 									line = line.Replace("; Region_Welcome_Area", "Region_" + regionName);
 
-							//	[GridInfoService]
 							//	gridname = "the lost continent of hippo"
 							if (line.Contains("gridname"))
 								if (line.Contains("gridname"))
@@ -677,36 +605,37 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-							// 	       [Const]
-							// 	       BaseURL = "http://127.0.0.1"
+							// BaseURL = "http://127.0.0.1"
 							if (line.Contains("BaseURL"))
 								if (line.Contains("http://127.0.0.1"))
 									line = line.Replace("http://127.0.0.1", "http://" + ipAddress + "");
 
-							// 	       [ServiceList]
-							// 	       ; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
+							// ; OfflineIMServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.OfflineIM.dll:OfflineIMServiceRobustConnector"
 							if (line.Contains("OfflineIMServiceConnector"))
 								if (line.Contains("OfflineIMServiceConnector"))
 									line = line.Replace("; OfflineIMServiceConnector", "OfflineIMServiceConnector");
-							// 	       ; GroupsServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.Groups.dll:GroupsServiceRobustConnector"
+							
+							// ; GroupsServiceConnector = "${Const|PrivatePort}/OpenSim.Addons.Groups.dll:GroupsServiceRobustConnector"
 							if (line.Contains("OfflineIMServiceConnector"))
 								if (line.Contains("GroupsServiceConnector"))
 									line = line.Replace("; GroupsServiceConnector", "GroupsServiceConnector");
-							// 	       ; BakedTextureService = "${Const|PrivatePort}/OpenSim.Server.Handlers.dll:XBakesConnector"
+							
+							// ; BakedTextureService = "${Const|PrivatePort}/OpenSim.Server.Handlers.dll:XBakesConnector"
 							if (line.Contains("BakedTextureService"))
 								if (line.Contains("BakedTextureService"))
 									line = line.Replace("; BakedTextureService", "BakedTextureService");
-							// 	       ; UserProfilesServiceConnector = "${Const|PublicPort}/OpenSim.Server.Handlers.dll:UserProfilesConnector"
+							
+							// ; UserProfilesServiceConnector = "${Const|PublicPort}/OpenSim.Server.Handlers.dll:UserProfilesConnector"
 							if (line.Contains("UserProfilesServiceConnector"))
 								if (line.Contains("UserProfilesServiceConnector"))
 									line = line.Replace("; UserProfilesServiceConnector", "UserProfilesServiceConnector");
-							// 	       ; HGGroupsServiceConnector = "${Const|PublicPort}/OpenSim.Addons.Groups.dll:HGGroupsServiceRobustConnector"
+							
+							// ; HGGroupsServiceConnector = "${Const|PublicPort}/OpenSim.Addons.Groups.dll:HGGroupsServiceRobustConnector"
 							if (line.Contains("HGGroupsServiceConnector"))
 								if (line.Contains("HGGroupsServiceConnector"))
 									line = line.Replace("; HGGroupsServiceConnector", "HGGroupsServiceConnector");
 
-							// 	       [Hypergrid]
-							//	; HomeURI = "${Const|BaseURL}:${Const|PublicPort}"
+							// ; HomeURI = "${Const|BaseURL}:${Const|PublicPort}"
 							if (line.Contains("HomeURI"))
 								if (line.Contains("HomeURI"))
 									line = line.Replace("; HomeURI =", "HomeURI =");
@@ -722,7 +651,6 @@ namespace OpenSim.Configuration
 								if (line.Contains("Region_Welcome_Area"))
 									line = line.Replace("; Region_Welcome_Area", "Region_" + regionName);
 
-							// 	       [GridInfoService]
 							//	gridname = "the lost continent of hippo"
 							if (line.Contains("gridname"))
 								if (line.Contains("gridname"))
@@ -761,7 +689,7 @@ namespace OpenSim.Configuration
 							if (line.Contains("password"))
 								if (line.Contains("password"))
 									line = line.Replace(";password = ${Const|BaseURL}/password", "password = ${Const|BaseURL}/");
-							// 	       ; gatekeeper = ${Const|BaseURL}:${Const|PublicPort}/ 
+							
 							// GatekeeperURIAlias
 							if (line.Contains("GatekeeperURIAlias"))
 								if (line.Contains("GatekeeperURIAlias"))
@@ -802,14 +730,12 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
-							//[DatabaseService]
 							//	ConnectionString = "Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;"
-							// "Data Source="+dbHost+";Database="+ dbSchema+";User ID="+dbUser+";Password="+dbPasswd+";Old Guids=true;"
-							// dbHost dbSchema dbUser dbPasswd
 							if (line.Contains("ConnectionString"))
 								if (line.Contains("ConnectionString"))
 									line = line.Replace("Data Source=localhost;Database=opensim;User ID=opensim;Password=*****;Old Guids=true;", "\"Data Source=" + dbHost + ";Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";Old Guids=true;\"");
-
+							
+							// ; gatekeeper = ${Const|BaseURL}:${Const|PublicPort}/ 
 							if (line.Contains("GatekeeperURI"))
 								if (line.Contains("GatekeeperURI"))
 									line = line.Replace("; GatekeeperURI =", "GatekeeperURI =");
@@ -838,7 +764,6 @@ namespace OpenSim.Configuration
 			Console.WriteLine("GridCommon has been successfully configured");
 		}
 
-		///ConfigureosslEnable()
 		private static void ConfigureosslEnable()
 		{
 			try
@@ -850,16 +775,20 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
+
 							tw.WriteLine(line);
 						}
 					}
 				}
 			}
+
+
 			catch (Exception e)
 			{
 				Console.WriteLine("Error configuring osslEnable " + e.Message);
 				return;
 			}
+
 
 			Console.WriteLine("osslEnable has been successfully configured");
 		}
@@ -867,9 +796,11 @@ namespace OpenSim.Configuration
 		///ConfigureRegions()
 		private static void ConfigureRegions()
 		{
-			// Dateiprüfung
+			// Dateipruefung
 			string path = "Regions.ini";
 			bool result = File.Exists(path);
+			int rPort = GetNextFreePort(9100, 9199);
+			string regionPort = Convert.ToString(rPort);
 			if (result == true)
 			{
 				Console.WriteLine("Regions.ini already exist");
@@ -879,13 +810,13 @@ namespace OpenSim.Configuration
 				Guid UUID = Guid.NewGuid();
 
 				StreamWriter writer = File.CreateText("Regions/Regions.ini");
-			
-				// Ein paar Einträge hineinschreiben
+
+				// Insert entries
 				writer.WriteLine("[" + regionName + "]");
 				writer.WriteLine("RegionUUID = " + UUID);
 				writer.WriteLine("Location = " + location);
 				writer.WriteLine("InternalAddress = 0.0.0.0");
-				writer.WriteLine("InternalPort = 9100");
+				writer.WriteLine("InternalPort = " + regionPort);
 				writer.WriteLine("AllowAlternatePorts = False");
 				writer.WriteLine("ResolveAddress = False");
 				writer.WriteLine("ExternalHostName = " + ipAddress);
@@ -900,25 +831,23 @@ namespace OpenSim.Configuration
 				writer.WriteLine("MaxAgents = 50");
 				writer.WriteLine("; MaxPrimsPerUser = -1");
 
-				writer.Close(); // Den Dateizugriff beenden
+				writer.Close();
 
 				Console.WriteLine("Regions.ini has been successfully configured");
-			}// Dateiprüfung Ende
+			}
 		}
 
-		// #############################################################################
-
-		/// Display
 		private static void DisplayInfo()
         {
-            Console.WriteLine("\n ");
+            Console.WriteLine("\n***************************************************");
             Console.WriteLine("Your Virtual World is " + worldName);
             Console.WriteLine("Your loginuri is http://" + ipAddress + ":8002");
-			Console.WriteLine(" ");
 			Console.WriteLine("You start region is:");
 			Console.WriteLine("  Region name: " + regionName);
+			Console.WriteLine("  Region Port: " + regionPort);
+			Console.WriteLine("  Region Size: " + regionSize);
 			Console.WriteLine("  Location:   " + location);
-			Console.WriteLine(" \n");
+			Console.WriteLine("***************************************************\n");
             Console.Write("<Press enter to exit>");
             Console.ReadLine();
         }
