@@ -36,6 +36,8 @@ namespace OpenSim.Configuration
 		private static readonly string osPort = "9010";
 		private static string regionPort = "9100";
 
+
+		#region GetPublicIP
 		/// Determine IP
 		public static string GetPublicIP()
 		{
@@ -59,7 +61,9 @@ namespace OpenSim.Configuration
 			string a4 = a3[0];
 			return a4;
 		}
+		#endregion
 
+		#region GetNextFreePort
 		/// find the next available TCP port within a given range
 		public static int GetNextFreePort(int min, int max)
 		{
@@ -88,7 +92,9 @@ namespace OpenSim.Configuration
 
 			return firstUnused.Value;
 		}
-		
+		#endregion
+
+		#region SaveIni
 		/// Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
 		private static void SaveIni()
 		{
@@ -149,27 +155,10 @@ namespace OpenSim.Configuration
 				System.IO.File.Move("Regions/Regions.ini", "Regions/Regions.ini.old" + "." + Timestamp);
 			}
 		}
+		#endregion
 
-		public static void Main(string[] args)
-        {
-			GetUserInput();
-			
-			SaveIni(); // Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
-
-			ConfigureFlotsamCache();
-			ConfigureMoneyServer();
-			ConfigureOpenSim();
-			ConfigureRobust();
-			ConfigureRobustHG();
-			ConfigureStandaloneCommon();
-			ConfigureGridCommon();
-			ConfigureosslEnable();
-			ConfigureRegions();
-
-			DisplayInfo();
-        }
-
-        private static void GetUserInput()
+		#region GetUserInput
+		private static void GetUserInput()
         {
 			string tmp;
 			string myIP = GetPublicIP();
@@ -238,7 +227,9 @@ namespace OpenSim.Configuration
 
 			Console.WriteLine("\n***************************************************");
         }
+		#endregion
 
+		#region ConfigureFlotsamCache
 		///ConfigureFlotsamCache
 		private static void ConfigureFlotsamCache()
 		{
@@ -270,7 +261,9 @@ namespace OpenSim.Configuration
 
 			Console.WriteLine("FlotsamCache has been successfully configured");
 		}
+		#endregion
 
+		#region ConfigureMoneyServer
 		///ConfigureMoneyServer OK
 		private static void ConfigureMoneyServer()
 		{
@@ -335,6 +328,9 @@ namespace OpenSim.Configuration
 				Console.WriteLine("MoneyServer.ini.example Not Found");
 			}
 		}
+		#endregion
+
+		#region ConfigureOpenSim
 		///ConfigureOpenSim()
 		private static void ConfigureOpenSim()
 		{
@@ -366,6 +362,27 @@ namespace OpenSim.Configuration
 							// scene_throttle_max_bps = 75000000
 							if (line.Contains("DisableFacelights"))
                                 line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"\n    client_throttle_max_bps = 400000\n    scene_throttle_max_bps = 75000000");
+
+							/*
+							; the default view range. Viewers override this (no major effect still )
+							DefaultDrawDistance = 128.0
+
+							; limit the maximum view range (no effect still(does limit MaxRegionsViewDistance) )
+							MaxDrawDistance = 128
+
+							; Other regions visibility depends on avatar position and view range
+							; the view range considered is limited the maximum and minimum distances:
+							MaxRegionsViewDistance = 128
+							MinRegionsViewDistance = 48
+							*/
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
 
 							// [SimulatorFeatures]
 							// ; SearchServerURI = "http://127.0.0.1:9000/"
@@ -463,7 +480,9 @@ namespace OpenSim.Configuration
 
 			Console.WriteLine("OpenSim has been successfully configured");
 		}
+		#endregion
 
+		#region ConfigureRobust
 		private static void ConfigureRobust()
 		{
 			try
@@ -569,7 +588,9 @@ namespace OpenSim.Configuration
 			}
 			Console.WriteLine("Robust has been successfully configured");
 		}
+		#endregion
 
+		#region ConfigureRobustHG
 		private static void ConfigureRobustHG()
 		{
 			try
@@ -693,7 +714,9 @@ namespace OpenSim.Configuration
 			}
 			Console.WriteLine("RobustHG has been successfully configured");
 		}
-		
+		#endregion
+
+		#region ConfigureStandaloneCommon
 		///ConfigureStandaloneCommon()
 		private static void ConfigureStandaloneCommon()
 		{
@@ -818,7 +841,9 @@ namespace OpenSim.Configuration
 			}
 			Console.WriteLine("StandaloneCommon has been successfully configured");
 		}
-		
+		#endregion
+
+		#region ConfigureGridCommon
 		///ConfigureGridCommon()
 		private static void ConfigureGridCommon()
 		{
@@ -864,7 +889,9 @@ namespace OpenSim.Configuration
 
 			Console.WriteLine("GridCommon has been successfully configured");
 		}
+		#endregion
 
+		#region ConfigureosslEnable
 		private static void ConfigureosslEnable()
 		{
 			try
@@ -893,7 +920,9 @@ namespace OpenSim.Configuration
 
 			Console.WriteLine("osslEnable has been successfully configured");
 		}
+		#endregion
 
+		#region ConfigureRegions
 		///ConfigureRegions()
 		private static void ConfigureRegions()
 		{
@@ -937,7 +966,9 @@ namespace OpenSim.Configuration
 				Console.WriteLine("Regions.ini has been successfully configured");
 			}
 		}
+		#endregion
 
+		#region DisplayInfo
 		private static void DisplayInfo()
         {
             Console.WriteLine("\n***************************************************");
@@ -952,5 +983,27 @@ namespace OpenSim.Configuration
             Console.Write("<Press enter to exit>");
             Console.ReadLine();
         }
-    }
+		#endregion
+
+		#region Main
+		public static void Main(string[] args)
+		{
+			GetUserInput();
+
+			SaveIni(); // Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
+
+			ConfigureFlotsamCache();
+			ConfigureMoneyServer();
+			ConfigureOpenSim();
+			ConfigureRobust();
+			ConfigureRobustHG();
+			ConfigureStandaloneCommon();
+			ConfigureGridCommon();
+			ConfigureosslEnable();
+			ConfigureRegions();
+
+			DisplayInfo();
+		}
+		#endregion
+	}
 }
