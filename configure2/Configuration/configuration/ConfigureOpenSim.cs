@@ -27,7 +27,7 @@ namespace OpenSim.Configuration
 
 							//	   ; http_listener_port = 9000
 							if (line.Contains("http_listener_port"))
-								line = line.Replace("; http_listener_port = 9000", "http_listener_port = \"" + Configure.osPort + "\"");
+								line = line.Replace("; http_listener_port = 9000", "http_listener_port = \"" + Configure.portAddress + "\"");
 
 							//	   ; user_agent = "OpenSim LSL (Mozilla Compatible)"
 							if (line.Contains("user_agent"))
