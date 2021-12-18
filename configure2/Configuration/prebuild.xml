@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+    <Project frameworkVersion="v4_8" name="Configure" path="addon-modules/Configuration" type="Exe">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="OpenMetaverseTypes"/>
+	  <Reference name="System.Xml.Linq"/>
+
+      <Files>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="Tests" pattern="Tests"/>
+        </Match>
+      </Files>
+    </Project>
