@@ -40,6 +40,16 @@ namespace OpenSim.Configuration
 							if (line.Contains("DisableFacelights"))
 								line = line.Replace("; DisableFacelights = \"false\"", "DisableFacelights = \"true\"\n    client_throttle_max_bps = 400000\n    scene_throttle_max_bps = 75000000");
 
+
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+							if (line.Contains("Startup"))
+								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
+
 							/*
 							; the default view range. Viewers override this (no major effect still )
 							DefaultDrawDistance = 128.0
@@ -52,15 +62,9 @@ namespace OpenSim.Configuration
 							MaxRegionsViewDistance = 128
 							MinRegionsViewDistance = 48
 							*/
-							if (line.Contains("Startup"))
-								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
-							if (line.Contains("Startup"))
-								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
-							if (line.Contains("Startup"))
-								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
-							if (line.Contains("Startup"))
-								line = line.Replace("; SearchServerURI =", "SearchServerURI = ${Const|BaseURL}:${Const|PublicPort}");
-
+							if (line.Contains("NoVerifyCertChain"))
+								line = line.Replace("; NoVerifyCertChain = true", "; NoVerifyCertChain = true\n\n    ; the default view range limited\n    DefaultDrawDistance = 128.0\n    MaxDrawDistance = 128\n    MinRegionsViewDistance = 48\n    MaxRegionsViewDistance = 128");
+							
 							// [SimulatorFeatures]
 							// ; SearchServerURI = "http://127.0.0.1:9000/"
 							// SearchServerURI = "${Const|BaseURL}:${Const|PublicPort}"
@@ -99,7 +103,7 @@ namespace OpenSim.Configuration
 							//	   ; InitialTerrain = "pinhead-island"
 							if (line.Contains("pinhead-island"))
 								line = line.Replace("; InitialTerrain", "InitialTerrain");
-							line = line.Replace("pinhead-island", "flat");
+								line = line.Replace("pinhead-island", "flat");
 
 							// [UserProfiles]
 							// ;; ProfileServiceURL = ${Const|BaseURL}:${Const|PublicPort}
@@ -119,8 +123,8 @@ namespace OpenSim.Configuration
 							//	   [Architecture]
 							if (line.Contains("Include-Architecture"))
 								line = line.Replace("; Include-Architecture = \"config-include/StandaloneHypergrid.ini\"", " ");
-							line = line.Replace("; Include-Architecture = \"config-include/Grid.ini\"", " ");
-							line = line.Replace("; Include-Architecture = \"config-include/GridHypergrid.ini\"", " ");
+								line = line.Replace("; Include-Architecture = \"config-include/Grid.ini\"", " ");
+								line = line.Replace("; Include-Architecture = \"config-include/GridHypergrid.ini\"", " ");
 
 
 							// modus = "Standalone, StandaloneHG, Grid, [GridHG]
@@ -151,11 +155,11 @@ namespace OpenSim.Configuration
 
 			catch (Exception e)
 			{
-				Console.WriteLine("Error configuring MyWorld " + e.Message);
+				Console.WriteLine("Error configuring OpenSim.ini " + e.Message);
 				return;
 			}
 
-			Console.WriteLine("OpenSim has been successfully configured");
+			Console.WriteLine("OpenSim.ini has been successfully configured");
 		}
 		#endregion
 	}
