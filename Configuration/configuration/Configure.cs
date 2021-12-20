@@ -17,7 +17,16 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
-using Nini.Ini;
+using System.Collections;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Xml;
+
+using Nini.Config;
+using OpenMetaverse;
+
 
 
 namespace OpenSim.Configuration
@@ -255,17 +264,18 @@ namespace OpenSim.Configuration
 
 			SaveIni(); // Save Config to *.ini.old.dd-MM-yyyy-hh-mm-ss
 
-			ClassConfigureFlotsamCache.ConfigureFlotsamCache();
-			ClassConfigureMoneyServer.ConfigureMoneyServer();
-			ClassConfigureOpenSim.ConfigureOpenSim();
-			ClassConfigureRobust.ConfigureRobust();
-			ClassConfigureRobustHG.ConfigureRobustHG();
-			ClassConfigureStandaloneCommon.ConfigureStandaloneCommon();
-			ClassConfigureGridCommon.ConfigureGridCommon();
-			ClassConfigureosslEnable.ConfigureosslEnable();
-			ClassConfigureRegions.ConfigureRegions();
+			ClassConfigureFlotsamCache.ConfigureFlotsamCache(); //OK
+			ClassConfigureMoneyServer.ConfigureMoneyServer(); //OK
+			ClassConfigureOpenSim.ConfigureOpenSim(); //OK
+			ClassConfigureRobust.ConfigureRobust(); //OK
+			ClassConfigureRobustHG.ConfigureRobustHG(); //OK
+			ClassConfigureStandaloneCommon.ConfigureStandaloneCommon(); //OK
+			ClassConfigureGridCommon.ConfigureGridCommon(); //OK
+			ClassConfigureosslEnable.ConfigureosslEnable(); // OK
+			ClassConfigureRegions.ConfigureRegions(); //OK
 
 			DisplayInfo();
+
 		}
 		#endregion
 	}

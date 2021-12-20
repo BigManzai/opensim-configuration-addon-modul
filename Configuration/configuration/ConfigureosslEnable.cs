@@ -19,6 +19,20 @@ namespace OpenSim.Configuration
 						string line;
 						while ((line = tr.ReadLine()) != null)
 						{
+							/*
+							 * OSFunctionThreatLevel = VeryLow > VeryHigh
+							 * 
+							  osslParcelO = "" > osslParcelO = "PARCEL_OWNER,"
+							  osslParcelOG = "" > osslParcelOG = "PARCEL_GROUP_MEMBER,PARCEL_OWNER,"
+							*/
+							if (line.Contains("OSFunctionThreatLevel"))
+								line = line.Replace("OSFunctionThreatLevel = VeryLow", "OSFunctionThreatLevel = VeryHigh");
+
+							if (line.Contains("osslParcelO"))
+								line = line.Replace("osslParcelO = \"\"", "osslParcelO = \"PARCEL_OWNER, \"");
+
+							if (line.Contains("osslParcelOG"))
+								line = line.Replace("osslParcelOG = \"\"", "osslParcelOG = \"PARCEL_GROUP_MEMBER, PARCEL_OWNER, \"");
 
 							tw.WriteLine(line);
 						}

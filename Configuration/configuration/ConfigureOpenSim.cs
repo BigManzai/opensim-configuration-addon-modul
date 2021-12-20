@@ -38,10 +38,6 @@ namespace OpenSim.Configuration
 							if (line.Contains("http_listener_port"))
 								line = line.Replace("; http_listener_port = 9000", "http_listener_port = \"" + Configure.portAddress + "\"");
 
-							// ; DefaultScriptEngine = "YEngine", DefaultScriptEngine = "YEngine"
-							//	if (line.Contains("DefaultScriptEngine"))
-							//	line = line.Replace("DefaultScriptEngine = \"YEngine\"", "hDefaultScriptEngine = \"YEngine\"");
-
 							// ; DrawPrimOnMapTile = true
 							if (line.Contains("DrawPrimOnMapTile"))
 								line = line.Replace("; DrawPrimOnMapTile = true", "DrawPrimOnMapTile = true");
